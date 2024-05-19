@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const constants = require("../../utils/configs/config");
+const constants = require("../../utils/config");
 const {
   forwardRequest,
   resolveRequest,

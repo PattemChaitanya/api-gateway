@@ -2,21 +2,12 @@ const { userModel } = require("../models/index");
 const fs = require("fs");
 const yaml = require("yaml");
 
-function __validateConsumerBasicAuth(userKey, userModel) {
-  return new Promise((resolve, reject) => {
-    userModel
-      .findByBasicToken(userKey)
-      .then((result) => {
-        if (result) {
-          resolve();
-        } else {
-          reject("Your key isn't valid");
-        }
-      })
-      .catch((_) => {
-        reject("Couldn't process the request at the moment");
-      });
-  });
+async function __validateConsumerBasicAuth(userKey, userModel) {
+  try {
+    return await userModel.findByBasicToken(userKey);
+  } catch (e) {
+    throw e;
+  }
 }
 
 function __grabRequest(req) {
@@ -42,99 +33,94 @@ function __grabRequest(req) {
   };
 }
 
-function __getServiceInformation(service_name) {
-  return new Promise((resolve, reject) => {
-    const file = fs.readFileSync("./app/gateway_conf.yml", "utf8");
-    const conf = yaml.parse(file);
-    if (conf.services.hasOwnProperty(service_name)) {
-      resolve(conf.services[service_name]);
+async function __getServiceInformation(service_name) {
+  const file = fs.readFileSync("./app/gateway_conf.yml", "utf8");
+  const conf = yaml.parse(file);
+  if (conf.services.hasOwnProperty(service_name)) {
+    return conf.services[service_name];
+  } else {
+    const err = {
+      type: "NOT_FOUND",
+      module_source: "request_resolver",
+      message: "Invalid service access. Please check your request again/",
+    };
+    throw err;
+  }
+}
+
+async function __resolveRequest(req, logModel, callback) {
+  try {
+    let request = __grabRequest(req);
+    // Check if basic auth key is not specified
+    if (request.basic_auth === "") {
+      const err = {
+        type: "UNAUTHORIZED",
+        module_source: "request_resolver",
+        message: "You're not allowed to access this network",
+      };
+      callback(null, null, err);
+    }
+
+    await __validateConsumerBasicAuth(request.basic_auth, userModel);
+
+    // Get service information from the configuration file
+    const service = await __getServiceInformation(request.app_id || "");
+    let flag = false;
+
+    const availableEndPoints =
+      service.endpoints[request.method.toLowerCase()] || [];
+    const splittedRequestPath = request.path.replace(/^\/|\/$/g, "").split("/");
+    for (let i = 0; i < availableEndPoints.length; i++) {
+      let splittedEndPointPath = availableEndPoints[i]
+        .replace(/^\/|\/$/g, "")
+        .split("/");
+      if (splittedRequestPath.length === splittedEndPointPath.length) {
+        let fractalCheckFlag = true;
+        for (let j = 0; j < splittedEndPointPath.length; j++) {
+          if (
+            splittedEndPointPath[j] !== splittedRequestPath[j] &&
+            splittedEndPointPath[j] !== "*"
+          ) {
+            fractalCheckFlag = false;
+            break;
+          }
+        }
+        if (fractalCheckFlag) {
+          flag = true;
+          break;
+        }
+      }
+    }
+    if (flag) {
+      // If method found
+      logModel.addLog(
+        new logModel({
+          path: request.path,
+          service: request.app_id,
+          ip_address: request.ip_address,
+        })
+      );
+      callback(request, service, null);
     } else {
       const err = {
         type: "NOT_FOUND",
         module_source: "request_resolver",
-        message: "Invalid service access. Please check your request again/",
+        message: "Request method is not found.",
       };
-      reject(err);
+      callback(null, null, err);
     }
-  });
-}
-
-function __resolveRequest(req, logModel, callback) {
-  let request = __grabRequest(req);
-  // Check if basic auth key is not specified
-  if (request.basic_auth === "") {
-    const err = {
-      type: "UNAUTHORIZED",
-      module_source: "request_resolver",
-      message: "You're not allowed to access this network",
-    };
-    callback(null, null, err);
-  }
-
-  __validateConsumerBasicAuth(request.basic_auth, userModel)
-    .then(() => {
-      // Get service information from the configuration file
-      __getServiceInformation(request.app_id || "")
-        .then((service) => {
-          let flag = false;
-
-          const availableEndPoints =
-            service.endpoints[request.method.toLowerCase()] || [];
-          const splittedRequestPath = request.path
-            .replace(/^\/|\/$/g, "")
-            .split("/");
-          for (let i = 0; i < availableEndPoints.length; i++) {
-            let splittedEndPointPath = availableEndPoints[i]
-              .replace(/^\/|\/$/g, "")
-              .split("/");
-            if (splittedRequestPath.length === splittedEndPointPath.length) {
-              let fractalCheckFlag = true;
-              for (let j = 0; j < splittedEndPointPath.length; j++) {
-                if (
-                  splittedEndPointPath[j] !== splittedRequestPath[j] &&
-                  splittedEndPointPath[j] !== "*"
-                ) {
-                  fractalCheckFlag = false;
-                  break;
-                }
-              }
-              if (fractalCheckFlag) {
-                flag = true;
-                break;
-              }
-            }
-          }
-          if (flag) {
-            // If method found
-            logModel.addLog(
-              new logModel({
-                path: request.path,
-                service: request.app_id,
-                ip_address: request.ip_address,
-              })
-            );
-            callback(request, service, null);
-          } else {
-            const err = {
-              type: "NOT_FOUND",
-              module_source: "request_resolver",
-              message: "Request method is not found.",
-            };
-            callback(null, null, err);
-          }
-        })
-        .catch((err) => {
-          callback(null, null, err);
-        });
-    })
-    .catch((_) => {
+  } catch (err) {
+    if (err.type === "UNAUTHORIZED") {
       const err = {
         type: "UNAUTHORIZED",
         module_source: "request_resolver",
         message: "Your signature is not valid.",
       };
       callback(null, null, err);
-    });
+    } else {
+      callback(null, null, err);
+    }
+  }
 }
 
 module.exports = (logModel) => {
