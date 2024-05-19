@@ -1,0 +1,33 @@
+services:
+    firstService:
+        port: 3422
+        base_url: http://localhost
+        endpoints:
+            get:
+                - /user
+                - /item
+                - /testing
+            put:
+                - /user/*/*/fdf
+                - /item/*/*
+            delete:
+                - /user/
+                - /item/
+            post: 
+                - /user/create
+                - /item/create
+        secret_key: mainServiceIsRestrictedOnly
+    secondService:
+        port: 3400
+        base_url: http://localhost
+        endpoints:
+            get:
+                - /hello
+                - /user/*
+            put:
+                - /user/hello
+            delete:
+                - /user/delete/*
+            post: 
+                - /user/create
+        secret_key: mainServiceIsRestrictedOnly
