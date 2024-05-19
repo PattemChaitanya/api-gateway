@@ -1,66 +1,49 @@
 const { userModel } = require("../models/index");
-const { SALT_ROUND } = require("../../utils/configs/config");
+const { SALT_ROUND } = require("../../utils/config");
 const bcrypt = require("bcrypt");
 
-function __hashAnything(key) {
-  return new Promise((resolve, reject) => {
-    bcrypt.genSalt(SALT_ROUND, (err, salt) => {
-      if (err) {
-        reject(err);
-      }
-      bcrypt.hash(key, salt, (err, hash) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(hash);
-      });
+async function __passwordHashing(key) {
+  try {
+    const salt = await bcrypt.genSalt(SALT_ROUND);
+    const hash = await bcrypt.hash(key, salt);
+    return hash;
+  } catch (err) {
+    console.error(e, "error in hashing");
+    throw err;
+  }
+}
+
+async function registerUser(data) {
+  try {
+    let passwordTemp = data.password;
+
+    let hashedPassword = await __passwordHashing(passwordTemp);
+    data.password = hashedPassword;
+
+    let hashedBasicAuth = await __passwordHashing(hashedPassword);
+
+    let user = new userModel({
+      username: data.username,
+      password: data.password,
+      basic_auth: hashedBasicAuth,
     });
-  });
+
+    let insertedUserData = await userModel.insertUserData(user);
+    return insertedUserData;
+  } catch (e) {
+    console.error(e, "error in register user");
+    throw e;
+  }
 }
 
-function register(data) {
-  return new Promise((resolve, reject) => {
-    var passwordTmp = data.password;
-    __hashAnything(passwordTmp)
-      .then((hashedPassword) => {
-        data.password = hashedPassword;
-        __hashAnything(hashedPassword)
-          .then((hashedBasicAuth) => {
-            let user = new userModel({
-              username: data.username,
-              password: data.password,
-              basic_auth: hashedBasicAuth,
-            });
-            userModel
-              .insertNewUser(user)
-              .then((result) => {
-                resolve(result);
-              })
-              .catch((err) => {
-                reject(err);
-              });
-          })
-          .catch((err) => {
-            reject(err);
-          });
-      })
-      .catch((err) => {
-        reject(err);
-      });
-  });
+async function getAllUsers() {
+  try {
+    let allUserData = await userModel.getAll();
+    return allUserData;
+  } catch (e) {
+    console.error(e, "error in getting all users");
+    throw e;
+  }
 }
 
-function getAllUsers() {
-  return new Promise((resolve, reject) => {
-    userModel
-      .getAll()
-      .then((docs) => {
-        resolve(docs);
-      })
-      .catch((err) => {
-        reject(err);
-      });
-  });
-}
-
-module.exports = { register, getAllUsers };
+module.exports = { registerUser, getAllUsers };

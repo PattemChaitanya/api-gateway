@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const middleware = require("../app/core/middlewares/gateway_middleware");
 const { openDatabaseConnection } = require("./utils/database");
 const morgan = require("morgan");
-const { PORT } = require("./utils/configs/config");
+const { PORT } = require("./utils/config");
 
 const app = express();
 app.use(cors());
