@@ -6,13 +6,10 @@ module.exports = {
   openDatabaseConnection: () => {
     console.log("Connecting to database");
     mongoose
-      .connect(
-        `mongodb+srv://pattemchaitu:oBSXArjaxWwG5x5j@chaitanya.zvljb49.mongodb.net/${DB_NAME}`,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true,
-        }
-      )
+      .connect(`${MONGODB_URL}/${DB_NAME}`, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      })
       .then((result) => {
         console.log("Connected to database");
       })
