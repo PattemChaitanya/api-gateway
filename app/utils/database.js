@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { DB_NAME } = require("./configs/config");
+const { MONGODB_URL, DB_NAME } = require("./config");
 mongoose.set("runValidators", true);
 
 module.exports = {

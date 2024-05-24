@@ -1,10 +1,10 @@
 const redis = require("redis");
 const bluebird = require("bluebird");
 
-bluebird.promisifyAll(redis); // Make everything on redis be async
+bluebird.promisifyAll(redis);
 
 const redisClient = redis.createClient({
-  port: 6379,
+  port: 9090,
 });
 
 module.exports = {
