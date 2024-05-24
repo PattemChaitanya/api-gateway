@@ -1,38 +1,28 @@
 function __createModel(mongoose) {
   const schema = require("./schema")(mongoose);
-  schema.statics.getAll = function () {
-    return Promise((resolve, reject) => {
-      this.find({})
-        .then((docs) => {
-          resolve(docs);
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
+  schema.statics.getAll = async function () {
+    try {
+      const getAll = await this.find({});
+      return getAll;
+    } catch (e) {
+      throw e;
+    }
   };
-  schema.statics.getByID = function (id) {
-    return Promise((resolve, reject) => {
-      this.findOne({ _id: id })
-        .then((doc) => {
-          resolve(doc);
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
+  schema.statics.getByID = async function (id) {
+    try {
+      const getByID = await this.findOne({ _id: id });
+      return getByID;
+    } catch (e) {
+      throw e;
+    }
   };
-  schema.statics.addLog = function (log) {
-    return new Promise((resolve, reject) => {
-      log
-        .save()
-        .then((result) => {
-          resolve(result);
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
+  schema.statics.addLog = async function (log) {
+    try {
+      const addLog = await log.save();
+      return addLog;
+    } catch (e) {
+      throw e;
+    }
   };
 
   return schema;
