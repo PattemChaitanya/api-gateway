@@ -4,5 +4,5 @@ module.exports = {
   DB_NAME: "GATEWAY_PRATICE",
   SECRET_KEY: "this system is fucked up!@#$%&*())(*&^%$#@!",
   SALT_ROUND: 15,
-  PORT: 9099,
+  PORT: 6379,
 };
