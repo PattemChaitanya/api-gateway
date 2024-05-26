@@ -1,5 +1,5 @@
 function __createCacheAdapter(redisClient) {
-  const cacheAdapter = require("./res_cache")(redisClient);
+  const cacheAdapter = require("./response_cache")(redisClient);
   return cacheAdapter;
 }
 

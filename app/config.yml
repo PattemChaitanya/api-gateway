@@ -1,6 +1,6 @@
 services:
     firstService:
-        port: 3422
+        port: 9080
         base_url: http://localhost
         endpoints:
             get:
@@ -18,7 +18,7 @@ services:
                 - /item/create
         secret_key: mainServiceIsRestrictedOnly
     secondService:
-        port: 3400
+        port: 9081
         base_url: http://localhost
         endpoints:
             get:

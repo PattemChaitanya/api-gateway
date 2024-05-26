@@ -48,7 +48,7 @@ async function __getServiceInformation(service_name) {
   }
 }
 
-async function __resolveRequest(req, logModel, callback) {
+async function __resolveRequest(req, logModel) {
   try {
     let request = __grabRequest(req);
     // Check if basic auth key is not specified
@@ -58,7 +58,7 @@ async function __resolveRequest(req, logModel, callback) {
         module_source: "request_resolver",
         message: "You're not allowed to access this network",
       };
-      callback(null, null, err);
+      throw err;
     }
 
     await __validateConsumerBasicAuth(request.basic_auth, userModel);
@@ -93,21 +93,21 @@ async function __resolveRequest(req, logModel, callback) {
     }
     if (flag) {
       // If method found
-      logModel.addLog(
+      await logModel.addLog(
         new logModel({
           path: request.path,
           service: request.app_id,
           ip_address: request.ip_address,
         })
       );
-      callback(request, service, null);
+      return { request, service };
     } else {
       const err = {
         type: "NOT_FOUND",
         module_source: "request_resolver",
         message: "Request method is not found.",
       };
-      callback(null, null, err);
+      throw err;
     }
   } catch (err) {
     if (err.type === "UNAUTHORIZED") {
@@ -116,17 +116,17 @@ async function __resolveRequest(req, logModel, callback) {
         module_source: "request_resolver",
         message: "Your signature is not valid.",
       };
-      callback(null, null, err);
+      throw err;
     } else {
-      callback(null, null, err);
+      throw err;
     }
   }
 }
 
 module.exports = (logModel) => {
   return {
-    resolveRequest: (req, callback) => {
-      return __resolveRequest(req, logModel, callback);
+    resolveRequest: async (req) => {
+      return await __resolveRequest(req, logModel);
     },
   };
 };
