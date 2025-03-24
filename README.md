@@ -21,4 +21,3 @@ The server is configured in the `app/server.js` file. It uses Express.js, a fast
 ### Configuration
 
 The project's configuration is securely stored in the `app/utils/config.js` file. It includes vital parameters such as the MongoDB URL, database name, secret key for secure transactions, salt round for password hashing to enhance security, and the port on which the server listens for incoming requests.
-

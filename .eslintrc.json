@@ -1,0 +1,40 @@
+{
+  "env": {
+    "node": true,
+    "es2021": true,
+    "jest": true
+  },
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
+  "rules": {
+    "linebreak-style": ["error", "unix"],
+    "no-console": ["error", { "allow": ["error", "warn", "info"] }],
+    "no-process-exit": "off"
+  },
+  "overrides": [
+    {
+      "files": ["app/server.js"],
+      "rules": {
+        "no-process-exit": "off",
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["app/utils/**/*.js"],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["tests/**/*.js", "tests/**/*.test.js"],
+      "env": {
+        "jest": true
+      },
+      "rules": {
+        "linebreak-style": "off"
+      }
+    }
+  ]
+}

@@ -1,21 +1,18 @@
 const mongoose = require("mongoose");
-const { MONGODB_URL, DB_NAME } = require("./config");
-mongoose.set("runValidators", true);
+
+async function connectToDatabase(uri) {
+  try {
+    await mongoose.connect(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.info("Successfully connected to database");
+  } catch (error) {
+    console.error("Error connecting to database:", error);
+    throw error;
+  }
+}
 
 module.exports = {
-  openDatabaseConnection: () => {
-    console.log("Connecting to database");
-    mongoose
-      .connect(`${MONGODB_URL}/${DB_NAME}`, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      })
-      .then((result) => {
-        console.log("Connected to database");
-      })
-      .catch((err) => {
-        console.log(err);
-        throw Error(err);
-      });
-  },
+  connectToDatabase,
 };

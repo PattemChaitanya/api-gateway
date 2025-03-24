@@ -1,57 +1,48 @@
-function __createModel(mongoose) {
-  const schema = require("./schema")(mongoose);
-  schema.statics.getAll = async function () {
-    try {
-      const getAllUsers = await this.find({});
-      return getAllUsers;
-    } catch (err) {
-      throw err;
-    }
-  };
-  schema.statics.insertNewUser = async function (userData) {
-    try {
-      const insertNewUser = await userData.save();
-      return insertNewUser;
-    } catch (e) {
-      throw e;
-    }
-  };
-  schema.statics.findByBasicToken = async function (basicToken) {
-    try {
-      const findByBasicTokenUser = await this.findOne({
-        basic_auth: basicToken,
-      });
-      return findByBasicTokenUser;
-    } catch (e) {
-      throw e;
-    }
-  };
-  schema.statics.deleteUserByBasicToken = async function (basicToken) {
-    try {
-      const deleteUserByBasicToken = await this.deleteOne({
-        basic_auth: basicToken,
-      });
-      return deleteUserByBasicToken;
-    } catch (e) {
-      throw e;
-    }
-  };
-  schema.statics.updateUserData = async function (userData, basicToken) {
-    try {
-      const updateUserData = await this.updateOne(
-        { basic_auth: basicToken },
-        userData
-      );
-      return updateUserData;
-    } catch (e) {
-      throw e;
-    }
-  };
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
-  return schema;
+const userSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+  basic_token: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  created_at: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+userSchema.pre("save", async function (next) {
+  if (this.isModified("password")) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+  next();
+});
+
+async function findByBasicToken(token) {
+  return await this.findOne({ basic_token: token });
 }
 
-module.exports = (mongoose) => {
-  const schema = __createModel(mongoose);
-  return mongoose.model("user_model", schema);
-};
+async function findByEmail(email) {
+  return await this.findOne({ email });
+}
+
+async function validatePassword(password) {
+  return await bcrypt.compare(password, this.password);
+}
+
+userSchema.methods.validatePassword = validatePassword;
+userSchema.statics.findByBasicToken = findByBasicToken;
+userSchema.statics.findByEmail = findByEmail;
+
+module.exports = mongoose.model("User", userSchema);

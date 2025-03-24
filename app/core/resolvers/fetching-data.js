@@ -1,6 +1,7 @@
 const { userModel } = require("../models/index");
 const { SALT_ROUND } = require("../../utils/config");
 const bcrypt = require("bcrypt");
+const axios = require("axios");
 
 async function __passwordHashing(key) {
   try {
@@ -8,7 +9,7 @@ async function __passwordHashing(key) {
     const hash = await bcrypt.hash(key, salt);
     return hash;
   } catch (err) {
-    console.error(e, "error in hashing");
+    console.error(err, "error in hashing");
     throw err;
   }
 }
@@ -46,4 +47,19 @@ async function getAllUsers() {
   }
 }
 
-module.exports = { registerUser, getAllUsers };
+async function fetchData(url, method, headers, body) {
+  const response = await axios({
+    method,
+    url,
+    headers,
+    data: body,
+  });
+
+  return {
+    status: response.status,
+    data: response.data,
+    headers: response.headers,
+  };
+}
+
+module.exports = { registerUser, getAllUsers, fetchData };
