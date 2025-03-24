@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./config/swagger");
 const { PORT } = require("./utils/config");
 const databaseManager = require("./core/database/DatabaseManager");
 const UserService = require("./core/services/UserService");
@@ -8,6 +10,7 @@ const CacheManager = require("./core/cache/CacheManager");
 const LoggingService = require("./core/services/LoggingService");
 const MonitoringService = require("./core/services/MonitoringService");
 const { v4: uuidv4 } = require("uuid");
+const path = require("path");
 
 class Server {
   constructor() {
@@ -21,6 +24,7 @@ class Server {
 
     this.initializeMiddleware();
     this.initializeServices();
+    this.setupSwagger();
     this.setupRoutes();
   }
 
@@ -33,6 +37,9 @@ class Server {
 
     this.app.use(cors());
     this.app.use(bodyParser.json());
+
+    // Serve static files
+    this.app.use("/public", express.static(path.join(__dirname, "../public")));
 
     // Add request logging
     this.app.use(this.loggingService.getRequestLogger());
@@ -52,6 +59,37 @@ class Server {
         service: req.headers["app_id"],
       });
       next(err);
+    });
+  }
+
+  setupSwagger() {
+    // Serve Swagger documentation as the homepage
+    this.app.get("/", (req, res) => {
+      res.redirect("/api-docs");
+    });
+
+    // Serve Swagger UI
+    this.app.use(
+      "/api-docs",
+      swaggerUi.serve,
+      swaggerUi.setup(swaggerSpec, {
+        explorer: true,
+        customSiteTitle: "API Gateway Documentation",
+        customfavIcon: "/public/favicon.ico",
+        customCssUrl: "/public/swagger-custom.css",
+        swaggerOptions: {
+          persistAuthorization: true,
+          displayRequestDuration: true,
+          filter: true,
+          deepLinking: true,
+        },
+      }),
+    );
+
+    // Serve Swagger JSON
+    this.app.get("/swagger.json", (req, res) => {
+      res.setHeader("Content-Type", "application/json");
+      res.send(swaggerSpec);
     });
   }
 

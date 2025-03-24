@@ -6,7 +6,7 @@ function __getResponseCache(service_id, path, redisClient) {
       },
       (err) => {
         reject(err);
-      }
+      },
     );
   });
 }
@@ -19,7 +19,7 @@ function __setCache(service_id, path, data, redisClient) {
       },
       (err) => {
         reject(err);
-      }
+      },
     );
   });
 }

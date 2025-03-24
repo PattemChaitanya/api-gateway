@@ -101,7 +101,7 @@ class LoggingService extends BaseService {
         level: "info",
         type: "metrics",
       },
-      metrics
+      metrics,
     );
 
     try {

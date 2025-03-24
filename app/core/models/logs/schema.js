@@ -6,6 +6,6 @@ module.exports = (mongoose) => {
       service: { type: String, required: true },
       ip_address: { type: String, required: true },
     },
-    { collection: "logs" }
+    { collection: "logs" },
   );
 };

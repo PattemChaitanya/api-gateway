@@ -21,3 +21,49 @@ The server is configured in the `app/server.js` file. It uses Express.js, a fast
 ### Configuration
 
 The project's configuration is securely stored in the `app/utils/config.js` file. It includes vital parameters such as the MongoDB URL, database name, secret key for secure transactions, salt round for password hashing to enhance security, and the port on which the server listens for incoming requests.
+
+## Deployment
+
+### Netlify Deployment
+
+1. **Prerequisites**
+   - Netlify account
+   - MongoDB Atlas account (for database)
+   - Redis Cloud account (for caching)
+
+2. **Environment Setup**
+   Configure the following environment variables in Netlify:
+   - `MONGODB_URL`: MongoDB connection string
+   - `DB_NAME`: Database name
+   - `GATEWAY_SECRET_KEY`: Gateway secret key
+   - `SALT_ROUNDS`: Number of salt rounds for password hashing
+   - `REDIS_HOST`: Redis host
+   - `REDIS_PORT`: Redis port
+   - `REDIS_PASSWORD`: Redis password
+   - `JWT_SECRET`: JWT secret key
+   - `API_KEY`: API key for authentication
+   - `RATE_LIMIT_WHITELIST`: Comma-separated IPs (optional)
+
+3. **Deployment Steps**
+   ```bash
+   # Install Netlify CLI
+   npm install -g netlify-cli
+
+   # Login to Netlify
+   netlify login
+
+   # Initialize project (first time only)
+   netlify init
+
+   # Test locally
+   npm run dev
+
+   # Deploy
+   npm run deploy
+   ```
+
+4. **Post-Deployment**
+   - Verify environment variables in Netlify dashboard
+   - Test API endpoints
+   - Monitor logs in Netlify dashboard
+   - Set up domain and SSL if needed

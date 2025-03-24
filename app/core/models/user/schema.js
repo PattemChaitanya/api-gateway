@@ -6,6 +6,6 @@ module.exports = (mongoose) => {
       token_access: { type: String, default: "" },
       basic_auth: { type: String, default: "" },
     },
-    { collection: "user" }
+    { collection: "user" },
   );
 };
