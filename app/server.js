@@ -83,7 +83,7 @@ class Server {
           filter: true,
           deepLinking: true,
         },
-      }),
+      })
     );
 
     // Serve Swagger JSON
@@ -176,7 +176,7 @@ class Server {
       await databaseManager.connect();
       this.server = this.app.listen(this.port, () => {
         console.info(`Server running on http://localhost:${this.port}`);
-        this.monitoringService.logMetrics();
+        // this.monitoringService.logMetrics();
       });
       return this.server;
     } catch (error) {
