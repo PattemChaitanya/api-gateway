@@ -2,6 +2,9 @@
   functions = "netlify/functions"
   publish = "public"
 
+[build]
+  command = "npm install && npm run build"
+
 [functions]
   node_bundler = "esbuild"
   external_node_modules = ["mongodb", "redis"]
