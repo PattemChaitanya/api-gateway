@@ -9,7 +9,6 @@
     "test": "jest",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
-    "prepare": "husky install",
     "fix:all": "npm run lint:fix && npm run format",
     "test:watch": "jest --watch",
     "test:ci": "jest --ci --coverage --reporters=default --reporters=jest-junit",
