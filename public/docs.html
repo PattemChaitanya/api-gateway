@@ -17,8 +17,7 @@
                 dom_id: '#swagger-ui',
                 deepLinking: true,
                 presets: [
-                    SwaggerUIBundle.presets.apis,
-                    SwaggerUIBundle.SwaggerUIStandalonePreset
+                    SwaggerUIBundle.presets.apis
                 ],
                 layout: "BaseLayout",
                 supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
@@ -27,7 +26,8 @@
                 },
                 onFailure: function(e) {
                     console.error("Failed to load Swagger UI", e);
-                }
+                },
+                validatorUrl: null // Disable validator
             });
         }
     </script>
