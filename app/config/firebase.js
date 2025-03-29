@@ -3,10 +3,11 @@ const { getFirestore } = require('firebase/firestore');
 
 class FirebaseConfig {
   static #instance;
+  #app;
   #db;
 
   constructor() {
-    const config = {
+    const firebaseConfig = {
       apiKey: process.env.FIREBASE_API_KEY,
       authDomain: process.env.FIREBASE_AUTH_DOMAIN,
       projectId: process.env.FIREBASE_PROJECT_ID,
@@ -15,8 +16,8 @@ class FirebaseConfig {
       appId: process.env.FIREBASE_APP_ID
     };
 
-    const app = initializeApp(config);
-    this.#db = getFirestore(app);
+    this.#app = initializeApp(firebaseConfig);
+    this.#db = getFirestore(this.#app);
   }
 
   static getInstance() {
@@ -28,6 +29,10 @@ class FirebaseConfig {
 
   getDb() {
     return this.#db;
+  }
+
+  getApp() {
+    return this.#app;
   }
 }
 

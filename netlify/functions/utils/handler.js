@@ -16,10 +16,7 @@ const createResponse = (statusCode, body) => ({
 });
 
 const handleError = (error) => {
-  logging.logError({
-    message: error.message,
-    stack: error.stack,
-  });
+  logging.logError(error);
 
   return createResponse(error.statusCode || 500, {
     status: "error",

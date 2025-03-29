@@ -11,6 +11,7 @@ class MonitoringService extends BaseService {
       errorCount: 0,
       lastMetricsUpdate: Date.now(),
     };
+    this.requests = [];
   }
 
   /**
@@ -18,26 +19,21 @@ class MonitoringService extends BaseService {
    * @returns {Object} System metrics
    */
   getSystemMetrics() {
-    const totalMemory = os.totalmem();
-    const freeMemory = os.freemem();
-    const usedMemory = totalMemory - freeMemory;
+    const uptime = Math.floor((Date.now() - this.metrics.startTime) / 1000);
+    
+    const requestCount = this.requests.length;
+    const statusCodes = this.requests.reduce((acc, req) => {
+      acc[req.statusCode] = (acc[req.statusCode] || 0) + 1;
+      return acc;
+    }, {});
 
     return {
-      cpu: {
-        loadAvg: os.loadavg(),
-        cores: os.cpus().length,
+      uptime,
+      requests: {
+        total: requestCount,
+        statusCodes
       },
-      memory: {
-        total: totalMemory,
-        free: freeMemory,
-        used: usedMemory,
-        usagePercent: (usedMemory / totalMemory) * 100,
-      },
-      uptime: os.uptime(),
-      process: {
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
-      },
+      memory: process.memoryUsage()
     };
   }
 
@@ -47,6 +43,19 @@ class MonitoringService extends BaseService {
    * @param {Object} res - Express response object
    */
   trackRequest(req, res) {
+    const requestTime = Date.now();
+    this.requests.push({
+      path: req.path,
+      method: req.method,
+      statusCode: res?.statusCode || 200,
+      timestamp: requestTime
+    });
+
+    // Keep only the last 100 requests
+    if (this.requests.length > 100) {
+      this.requests.shift();
+    }
+
     this.metrics.requestCount++;
 
     if (res.statusCode >= 400) {
@@ -85,80 +94,11 @@ class MonitoringService extends BaseService {
    * @returns {Object} Health status
    */
   getHealthStatus() {
-    const systemMetrics = this.getSystemMetrics();
-    const memoryUsagePercent = systemMetrics.memory.usagePercent;
-    const cpuLoad = systemMetrics.cpu.loadAvg[0];
-
     return {
-      status: this.getSystemStatus(memoryUsagePercent, cpuLoad),
-      timestamp: new Date().toISOString(),
-      metrics: {
-        memory: {
-          usage: memoryUsagePercent.toFixed(2) + "%",
-          status: this.getMemoryStatus(memoryUsagePercent),
-        },
-        cpu: {
-          load: cpuLoad.toFixed(2),
-          status: this.getCpuStatus(cpuLoad),
-        },
-      },
-      uptime: {
-        system: this.formatUptime(systemMetrics.uptime),
-        process: this.formatUptime(systemMetrics.process.uptime),
-      },
+      status: 'healthy',
+      uptime: Math.floor((Date.now() - this.metrics.startTime) / 1000),
+      timestamp: new Date().toISOString()
     };
-  }
-
-  /**
-   * Get system status based on metrics
-   * @param {number} memoryUsage - Memory usage percentage
-   * @param {number} cpuLoad - CPU load average
-   * @returns {string} System status
-   */
-  getSystemStatus(memoryUsage, cpuLoad) {
-    if (memoryUsage > 90 || cpuLoad > 80) {
-      return "critical";
-    }
-    if (memoryUsage > 70 || cpuLoad > 60) {
-      return "warning";
-    }
-    return "healthy";
-  }
-
-  /**
-   * Get memory status
-   * @param {number} usage - Memory usage percentage
-   * @returns {string} Memory status
-   */
-  getMemoryStatus(usage) {
-    if (usage > 90) return "critical";
-    if (usage > 70) return "warning";
-    return "healthy";
-  }
-
-  /**
-   * Get CPU status
-   * @param {number} load - CPU load
-   * @returns {string} CPU status
-   */
-  getCpuStatus(load) {
-    if (load > 80) return "critical";
-    if (load > 60) return "warning";
-    return "healthy";
-  }
-
-  /**
-   * Format uptime in human-readable format
-   * @param {number} uptime - Uptime in seconds
-   * @returns {string} Formatted uptime
-   */
-  formatUptime(uptime) {
-    const days = Math.floor(uptime / 86400);
-    const hours = Math.floor((uptime % 86400) / 3600);
-    const minutes = Math.floor((uptime % 3600) / 60);
-    const seconds = Math.floor(uptime % 60);
-
-    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
   }
 }
 

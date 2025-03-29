@@ -392,9 +392,10 @@ const options = {
       },
     ],
   },
-  apis: ["./app/core/middlewares/*.js", "./app/core/routes/*.js"], // Path to the API docs
+  apis: []  // We're defining the API directly in the options above
 };
 
+// Generate the swagger specification
 const swaggerSpec = swaggerJsdoc(options);
 
 module.exports = swaggerSpec;

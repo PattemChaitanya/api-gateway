@@ -6,6 +6,7 @@ class LoggingService extends BaseService {
   constructor() {
     super();
     this.logModel = Log;
+    this.logs = [];
   }
 
   /**
@@ -13,25 +14,22 @@ class LoggingService extends BaseService {
    * @returns {Function} Morgan middleware
    */
   getRequestLogger() {
-    return morgan((tokens, req, res) => {
-      const logEntry = {
-        timestamp: new Date().toISOString(),
-        method: tokens.method(req, res),
-        url: tokens.url(req, res),
-        status: tokens.status(req, res),
-        responseTime: tokens["response-time"](req, res),
-        userAgent: tokens["user-agent"](req, res),
-        ip: tokens["remote-addr"](req, res),
-        requestId: req.id,
-        service: req.headers["app_id"] || "unknown",
-      };
-
-      // Log to database
-      this.logRequest(logEntry);
-
-      // Return formatted log line for console
-      return JSON.stringify(logEntry);
-    });
+    return (req, res, next) => {
+      const start = Date.now();
+      
+      res.on('finish', () => {
+        const duration = Date.now() - start;
+        this.logInfo(`${req.method} ${req.path} ${res.statusCode} ${duration}ms`, {
+          method: req.method,
+          path: req.path,
+          statusCode: res.statusCode,
+          duration,
+          requestId: req.id
+        });
+      });
+      
+      next();
+    };
   }
 
   /**
@@ -109,6 +107,44 @@ class LoggingService extends BaseService {
     } catch (error) {
       console.error("Failed to save metrics:", error);
     }
+  }
+
+  log(level, message, meta = {}) {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      level,
+      message,
+      ...meta
+    };
+    
+    console.log(JSON.stringify(logEntry));
+    
+    this.logs.push(logEntry);
+    
+    // Keep logs array from growing too large
+    if (this.logs.length > 1000) {
+      this.logs.shift();
+    }
+    
+    return logEntry;
+  }
+
+  logInfo(message, meta = {}) {
+    return this.log('info', message, meta);
+  }
+
+  logWarning(message, meta = {}) {
+    return this.log('warning', message, meta);
+  }
+
+  logError(error, meta = {}) {
+    const errorMeta = {
+      ...meta,
+      stack: error.stack,
+      name: error.name
+    };
+    
+    return this.log('error', error.message, errorMeta);
   }
 }
 

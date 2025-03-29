@@ -20,7 +20,92 @@ class FirebaseRecipeRepository extends BaseRepository {
     return FirebaseRecipeRepository.#instance;
   }
 
-  // ... rest of the repository methods remain the same
+  async findAll(page = 1, limitCount = 10) {
+    try {
+      const recipesRef = collection(this.#db, this.collectionName);
+      const q = query(
+        recipesRef,
+        orderBy('createdAt', 'desc'),
+        limit(limitCount)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => new Recipe({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error finding all recipes:', error);
+      return [];
+    }
+  }
+
+  async findById(id) {
+    try {
+      const docRef = doc(this.#db, this.collectionName, id);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        return new Recipe({
+          id: docSnap.id,
+          ...docSnap.data()
+        });
+      }
+      
+      return null;
+    } catch (error) {
+      console.error(`Error finding recipe ${id}:`, error);
+      return null;
+    }
+  }
+
+  async findByQuery(searchQuery) {
+    try {
+      const recipesRef = collection(this.#db, this.collectionName);
+      const q = query(
+        recipesRef,
+        where('title', '>=', searchQuery),
+        where('title', '<=', searchQuery + '\uf8ff'),
+        limit(20)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => new Recipe({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error(`Error searching recipes with query ${searchQuery}:`, error);
+      return [];
+    }
+  }
+
+  async update(id, data) {
+    try {
+      const docRef = doc(this.#db, this.collectionName, id);
+      const updatedData = {
+        ...data,
+        updatedAt: new Date().toISOString()
+      };
+      
+      await updateDoc(docRef, updatedData);
+      
+      // Get the updated document
+      const updatedDoc = await getDoc(docRef);
+      
+      if (updatedDoc.exists()) {
+        return new Recipe({
+          id: updatedDoc.id,
+          ...updatedDoc.data()
+        });
+      }
+      
+      return null;
+    } catch (error) {
+      console.error(`Error updating recipe ${id}:`, error);
+      return null;
+    }
+  }
 }
 
 module.exports = FirebaseRecipeRepository; 
