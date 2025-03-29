@@ -13,6 +13,11 @@
   external_node_modules = ["mongodb", "redis"]
 
 [[redirects]]
+  from = "/docs"
+  to = "/docs.html"
+  status = 200
+
+[[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
@@ -24,6 +29,13 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  # Don't put actual values here - use Netlify UI for sensitive data
+  FIREBASE_API_KEY = ""
+  FIREBASE_AUTH_DOMAIN = ""
+  FIREBASE_PROJECT_ID = ""
+  FIREBASE_STORAGE_BUCKET = ""
+  FIREBASE_MESSAGING_SENDER_ID = ""
+  FIREBASE_APP_ID = ""
 
 # Production context
 [context.production.environment]
@@ -41,17 +53,11 @@
 [[headers]]
   for = "/*"
   [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; img-src 'self' data:; font-src 'self' data:;"
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Content-Security-Policy = """
-      default-src 'self';
-      style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com;
-      script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com;
-      img-src 'self' data:;
-      font-src 'self' data:;
-    """
 
 [[headers]]
   for = "/*.css"

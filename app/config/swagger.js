@@ -4,30 +4,187 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "API Gateway Documentation",
-      version: "1.0.0",
-      description:
-        "A robust API Gateway service for managing and routing service requests, featuring authentication, service registration, monitoring, and logging capabilities.",
-      license: {
-        name: "ISC",
-        url: "https://opensource.org/licenses/ISC",
-      },
-      contact: {
-        name: "API Gateway Support",
-        url: "https://github.com/chaitanya/api-gateway",
-        email: "support@api-gateway.com",
-      },
+      title: "Recipe API Documentation",
+      description: "API documentation for Recipe Management System",
+      version: "1.0.0"
     },
     servers: [
       {
-        url: "http://localhost:9080",
-        description: "Development server",
-      },
-      {
-        url: "https://api-gateway.netlify.app",
-        description: "Production server",
-      },
+        url: "/.netlify/functions",
+        description: "Netlify Functions"
+      }
     ],
+    paths: {
+      "/recipes": {
+        get: {
+          summary: "Get all recipes with pagination",
+          parameters: [
+            {
+              name: "page",
+              in: "query",
+              schema: {
+                type: "integer",
+                default: 1
+              }
+            },
+            {
+              name: "limit",
+              in: "query",
+              schema: {
+                type: "integer",
+                default: 10
+              }
+            }
+          ],
+          responses: {
+            200: {
+              description: "Successful response",
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/RecipePagination"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/recipes-random": {
+        get: {
+          summary: "Get 10 random recipes",
+          responses: {
+            200: {
+              description: "Successful response",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "array",
+                    items: {
+                      $ref: "#/components/schemas/Recipe"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/recipes-search": {
+        get: {
+          summary: "Search recipes",
+          parameters: [
+            {
+              name: "q",
+              in: "query",
+              required: true,
+              schema: {
+                type: "string"
+              },
+              description: "Search query string"
+            }
+          ],
+          responses: {
+            200: {
+              description: "Successful response",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "array",
+                    items: {
+                      $ref: "#/components/schemas/Recipe"
+                    }
+                  }
+                }
+              }
+            },
+            400: {
+              description: "Bad Request - Missing search query",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      error: {
+                        type: "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/recipe": {
+        get: {
+          summary: "Get single recipe by ID",
+          parameters: [
+            {
+              name: "id",
+              in: "query",
+              required: true,
+              schema: {
+                type: "string"
+              }
+            }
+          ],
+          responses: {
+            200: {
+              description: "Successful response",
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/Recipe"
+                  }
+                }
+              }
+            },
+            404: {
+              description: "Recipe not found"
+            }
+          }
+        },
+        put: {
+          summary: "Update recipe",
+          parameters: [
+            {
+              name: "id",
+              in: "query",
+              required: true,
+              schema: {
+                type: "string"
+              }
+            }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/RecipeUpdate"
+                }
+              }
+            }
+          },
+          responses: {
+            200: {
+              description: "Recipe updated successfully",
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/Recipe"
+                  }
+                }
+              }
+            },
+            404: {
+              description: "Recipe not found"
+            }
+          }
+        }
+      }
+    },
     components: {
       securitySchemes: {
         ApiKeyAuth: {
@@ -120,6 +277,96 @@ const options = {
             },
           },
         },
+        Recipe: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string"
+            },
+            title: {
+              type: "string"
+            },
+            description: {
+              type: "string"
+            },
+            ingredients: {
+              type: "array",
+              items: {
+                type: "string"
+              }
+            },
+            instructions: {
+              type: "array",
+              items: {
+                type: "string"
+              }
+            },
+            cookingTime: {
+              type: "integer",
+              description: "Cooking time in minutes"
+            },
+            servings: {
+              type: "integer"
+            },
+            imageUrl: {
+              type: "string"
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time"
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time"
+            }
+          }
+        },
+        RecipeUpdate: {
+          type: "object",
+          properties: {
+            title: {
+              type: "string"
+            },
+            description: {
+              type: "string"
+            },
+            ingredients: {
+              type: "array",
+              items: {
+                type: "string"
+              }
+            },
+            instructions: {
+              type: "array",
+              items: {
+                type: "string"
+              }
+            },
+            cookingTime: {
+              type: "integer"
+            },
+            servings: {
+              type: "integer"
+            },
+            imageUrl: {
+              type: "string"
+            }
+          }
+        },
+        RecipePagination: {
+          type: "object",
+          properties: {
+            data: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/Recipe"
+              }
+            },
+            hasMore: {
+              type: "boolean"
+            }
+          }
+        }
       },
     },
     tags: [
