@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
 const { PORT } = require("./utils/config");
-const databaseManager = require("./core/database/DatabaseManager");
+const firebaseManager = require("./core/database/FirebaseManager");
 const UserService = require("./core/services/UserService");
 const CacheManager = require("./core/cache/CacheManager");
 const LoggingService = require("./core/services/LoggingService");
@@ -104,7 +104,7 @@ class Server {
     this.app.get("/health", (req, res) => {
       const healthStatus = this.monitoringService.getHealthStatus();
       const response = Object.assign({}, healthStatus, {
-        database: databaseManager.isConnected() ? "connected" : "disconnected",
+        database: firebaseManager.isConnected() ? "connected" : "disconnected",
       });
       res.json(response);
     });
@@ -173,7 +173,7 @@ class Server {
 
   async start() {
     try {
-      await databaseManager.connect();
+      await firebaseManager.connect();
       this.server = this.app.listen(this.port, () => {
         console.info(`Server running on http://localhost:${this.port}`);
         // this.monitoringService.logMetrics();
@@ -192,7 +192,7 @@ class Server {
           this.server.close(resolve);
         });
       }
-      await databaseManager.disconnect();
+      await firebaseManager.disconnect();
     } catch (error) {
       console.error("Error during shutdown:", error);
       throw new Error("Server shutdown failed");

@@ -10,7 +10,7 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["mongodb", "redis", "firebase", "firebase/app", "firebase/firestore"]
+  external_node_modules = ["redis", "firebase", "firebase/app", "firebase/firestore"]
   included_files = ["app/**"]
 
 [[redirects]]
@@ -37,6 +37,7 @@
   FIREBASE_STORAGE_BUCKET = ""
   FIREBASE_MESSAGING_SENDER_ID = ""
   FIREBASE_APP_ID = ""
+  FIREBASE_MEASUREMENT_ID = ""
 
 # Production context
 [context.production.environment]

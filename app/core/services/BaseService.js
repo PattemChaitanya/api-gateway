@@ -1,3 +1,6 @@
+/**
+ * Base service class for common service functionality
+ */
 class BaseService {
   constructor() {
     if (this.constructor === BaseService) {
@@ -24,31 +27,27 @@ class BaseService {
   }
 
   /**
-   * Transform response before sending to client
-   * @param {Object} response - Response object
-   * @returns {Object}
+   * Handle errors in a consistent way
+   * @param {Error} error - The error to handle
+   * @returns {Object} Standardized error response
    */
-  transformResponse(response) {
+  handleError(error) {
     return {
-      status: "success",
-      data: response,
-      service: this.constructor.name,
+      error: true,
+      message: error.message || 'An unknown error occurred',
+      code: error.code || 'UNKNOWN_ERROR'
     };
   }
 
   /**
-   * Handle errors in a consistent way
-   * @param {Error} error - Error object
-   * @returns {Object}
+   * Transform service response to consistent format
+   * @param {*} data - The data to transform
+   * @returns {Object} Standardized response
    */
-  handleError(error) {
+  transformResponse(data) {
     return {
-      status: "error",
-      error: {
-        code: error.code || "INTERNAL_SERVER_ERROR",
-        message: error.message,
-      },
-      service: this.constructor.name,
+      success: true,
+      data
     };
   }
 }

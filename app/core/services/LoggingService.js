@@ -50,25 +50,27 @@ class LoggingService extends BaseService {
    * @param {Object} context - Additional context
    */
   async logError(error, context = {}) {
-    const errorLog = {
-      timestamp: new Date().toISOString(),
-      level: "error",
-      error: {
-        message: error.message,
-        stack: error.stack,
-        code: error.code,
-      },
-      context,
-      service: context.service || "unknown",
+    const errorMeta = {
+      ...context,
+      stack: error.stack,
+      name: error.name,
+      code: error.code,
+      service: context.service || "unknown"
     };
-
-    console.error(JSON.stringify(errorLog));
-
+    
+    // Create log entry
+    const logEntry = this.log('error', error.message, errorMeta);
+    
+    // Also try to save to database if available
     try {
-      await this.logModel.addLog(errorLog);
+      if (this.logModel) {
+        await this.logModel.addLog(logEntry);
+      }
     } catch (err) {
-      console.error("Failed to save error log:", err);
+      console.error("Failed to save error log to database:", err);
     }
+    
+    return logEntry;
   }
 
   /**
@@ -78,10 +80,30 @@ class LoggingService extends BaseService {
    */
   async getLogs(filters = {}, limit = 100, skip = 0) {
     try {
-      if (filters.service) {
-        return await this.logModel.getLogsByService(filters.service, limit, skip);
+      // First try to get from database
+      if (this.logModel) {
+        if (filters.service) {
+          return await this.logModel.getLogsByService(filters.service, limit, skip);
+        }
+        return await this.logModel.getLogs(filters, limit, skip);
       }
-      return await this.logModel.getLogs(filters, limit, skip);
+      
+      // Fallback to in-memory logs if no database
+      let filteredLogs = [...this.logs];
+      
+      // Apply filters
+      if (filters.level) {
+        filteredLogs = filteredLogs.filter(log => log.level === filters.level);
+      }
+      if (filters.service) {
+        filteredLogs = filteredLogs.filter(log => log.service === filters.service);
+      }
+      
+      // Sort by timestamp descending
+      filteredLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      
+      // Apply pagination
+      return filteredLogs.slice(skip, skip + limit);
     } catch (error) {
       console.error("Failed to retrieve logs:", error);
       throw error;
@@ -103,12 +125,21 @@ class LoggingService extends BaseService {
     );
 
     try {
-      await this.logModel.addLog(metricLog);
+      if (this.logModel) {
+        await this.logModel.addLog(metricLog);
+      }
     } catch (error) {
       console.error("Failed to save metrics:", error);
     }
   }
 
+  /**
+   * Log a message at specified level
+   * @param {string} level - Log level
+   * @param {string} message - Log message
+   * @param {Object} meta - Additional metadata
+   * @returns {Object} The log entry
+   */
   log(level, message, meta = {}) {
     const logEntry = {
       timestamp: new Date().toISOString(),
@@ -117,8 +148,14 @@ class LoggingService extends BaseService {
       ...meta
     };
     
-    console.log(JSON.stringify(logEntry));
+    // Log to console
+    if (level === 'error') {
+      console.error(JSON.stringify(logEntry));
+    } else {
+      console.log(JSON.stringify(logEntry));
+    }
     
+    // Keep in-memory copy
     this.logs.push(logEntry);
     
     // Keep logs array from growing too large
@@ -129,23 +166,25 @@ class LoggingService extends BaseService {
     return logEntry;
   }
 
+  /**
+   * Log at info level
+   * @param {string} message - Log message
+   * @param {Object} meta - Additional metadata
+   * @returns {Object} The log entry
+   */
   logInfo(message, meta = {}) {
     return this.log('info', message, meta);
   }
 
+  /**
+   * Log at warning level
+   * @param {string} message - Log message
+   * @param {Object} meta - Additional metadata
+   * @returns {Object} The log entry
+   */
   logWarning(message, meta = {}) {
     return this.log('warning', message, meta);
   }
-
-  logError(error, meta = {}) {
-    const errorMeta = {
-      ...meta,
-      stack: error.stack,
-      name: error.name
-    };
-    
-    return this.log('error', error.message, errorMeta);
-  }
 }
 
-module.exports = LoggingService;
+module.exports = { LoggingService };
