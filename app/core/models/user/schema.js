@@ -1,11 +1,12 @@
-module.exports = (mongoose) => {
-  return new mongoose.Schema(
-    {
-      username: { type: String, required: true },
-      password: { type: String, required: true },
-      token_access: { type: String, default: "" },
-      basic_auth: { type: String, default: "" },
-    },
-    { collection: "user" },
-  );
+/**
+ * User schema definition for Firebase Firestore
+ * This is not used by Firestore directly, but serves as a reference for the expected document structure
+ */
+module.exports = {
+  username: { type: "string", required: true },
+  password: { type: "string", required: true },
+  token_access: { type: "string", default: "" },
+  basic_auth: { type: "string", default: "" },
+  createdAt: { type: "timestamp" },
+  updatedAt: { type: "timestamp" },
 };

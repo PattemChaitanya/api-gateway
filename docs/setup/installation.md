@@ -1,46 +1,114 @@
 # Installation Guide
 
-This guide will help you set up the API Gateway project on your local development environment.
+Follow these steps to set up and run the API Gateway project.
 
-## Prerequisites
+### Prerequisites
+
+Before you begin, ensure you have the following installed on your system:
 
 - Node.js (v14 or higher)
-- npm (v6 or higher)
-- Redis (v6 or higher)
-- MongoDB (v4.4 or higher)
+- npm or yarn
+- Firebase account and project
+- Redis (optional, for caching)
 
-## Installation Steps
+### Step 1: Clone the Repository
 
-1. Clone the repository:
+```bash
+git clone https://github.com/your-username/api-gateway.git
+cd api-gateway
+```
 
-   ```bash
-   git clone <repository-url>
-   cd chaitanya-api-gateway
+### Step 2: Install Dependencies
+
+```bash
+npm install
+# or
+yarn install
+```
+
+### Step 3: Environment Configuration
+
+Create a `.env` file in the root directory of the project and set up the required environment variables:
+
+```
+PORT=3000
+NODE_ENV=development
+
+# Firebase Configuration
+FIREBASE_API_KEY=your_firebase_api_key
+FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+FIREBASE_PROJECT_ID=your_firebase_project_id
+FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+FIREBASE_APP_ID=your_firebase_app_id
+FIREBASE_MEASUREMENT_ID=your_firebase_measurement_id
+
+# Redis Configuration (optional)
+REDIS_URL=redis://localhost:6379
+
+# Authentication
+SALT_ROUND=10
+SECRET_KEY=your_secret_key
+```
+
+### Step 4: Start the Server
+
+For development:
+
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+For production:
+
+```bash
+npm start
+# or
+yarn start
+```
+
+### Step 5: Verify Installation
+
+1. The server should be running on the port specified in your environment variables (default: 3000)
+2. Open a browser and navigate to `http://localhost:3000/api/health` to check if the server is running properly
+3. Verify Firebase connection:
+   ```
+   GET http://localhost:3000/api/status
    ```
 
-2. Install dependencies:
+### Troubleshooting
 
-   ```bash
-   npm install
-   ```
+If you encounter issues during installation or startup:
 
-3. Set up environment variables:
+1. Firebase Connection Issues:
+   - Check your Firebase credentials in the `.env` file
+   - Verify that your Firebase project is set up correctly
+   - Ensure your IP is allowed in Firebase security rules
 
-   ```bash
-   cp .env.example .env
-   ```
+2. Port Conflicts:
+   - If the port is already in use, change the PORT value in the `.env` file
 
-   Edit the `.env` file with your configuration values.
+3. Dependency Issues:
+   - Try clearing npm cache: `npm cache clean --force`
+   - Delete `node_modules` and reinstall dependencies
 
-4. Configure services:
+### Running Tests
 
-   - Update `app/config.yml` with your service configurations
-   - Ensure all referenced services are accessible
+```bash
+npm test
+# or
+yarn test
+```
 
-5. Start the development server:
-   ```bash
-   npm start
-   ```
+For test coverage:
+
+```bash
+npm run test:coverage
+# or
+yarn test:coverage
+```
 
 ## Environment Configuration
 

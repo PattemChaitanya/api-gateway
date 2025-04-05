@@ -1,26 +1,59 @@
-## Project Overview
+# API Gateway
 
-This project is a robust web application developed using Node.js and Express.js. It leverages MongoDB as its primary database for data storage and Redis for efficient caching to enhance performance. The architecture of the project is service-oriented, with each service encapsulating a specific functionality, complete with its own set of endpoints and configurations.
+This project is a robust web application developed using Node.js and Express.js. It leverages Firebase Firestore as its primary database for data storage and Redis for efficient caching to enhance performance. The architecture of the project is service-oriented, with each service encapsulating a specific
 
-### Services
+## Architecture
 
-The services are meticulously configured in the `app/config.yml` file. At present, the application comprises two main services: `firstService` and `secondService`. Each service is autonomous and has its own dedicated port, base URL, endpoints, and secret key for secure communication.
+The architecture of the project follows a service-oriented approach, with each service responsible for handling a specific domain of functionality. This modular design facilitates codebase maintainability and enhances testability.
 
-### Database
+## Database Connection
 
-The database connection is proficiently managed by the `app/utils/database.js` file. It employs Mongoose, a MongoDB object modeling tool, to establish a connection with the MongoDB database. The database URL and name are conveniently configured in the `app/utils/config.js` file, allowing for easy modifications if required.
+The database connection is proficiently managed by the `app/utils/database.js` file. It employs the Firebase Firestore SDK to establish a connection with the Firestore database. The Firebase configuration including API key, project ID, and other credentials are conveniently configured in the `app/utils/config.js` file, allowing for easy modifications if required.
 
-### Caching
+## Services
 
-Caching is adeptly handled by the `app/utils/cache.js` file. It utilizes Redis, a high-performance in-memory data structure store, and Bluebird, a fully-featured Promise library, to create a Redis client. This setup significantly improves the application's response time by storing frequently accessed data in memory.
+The services are responsible for executing the business logic of the application. They interact with the models to perform CRUD operations on data and implement the required functionality. Each service is specialized for a particular domain, such as authentication, user management, data processing, etc.
 
-### Server
+## API Controllers
 
-The server is configured in the `app/server.js` file. It uses Express.js, a fast, unopinionated, and minimalist web framework for Node.js. The server setup includes middleware for handling Cross-Origin Resource Sharing (CORS), logging with Morgan, parsing JSON with Body-Parser, and a custom middleware for additional functionality.
+The API controllers handle HTTP requests and responses. They validate the incoming data, invoke the appropriate service methods, and format the outgoing responses.
 
-### Configuration
+## Configuration
 
-The project's configuration is securely stored in the `app/utils/config.js` file. It includes vital parameters such as the MongoDB URL, database name, secret key for secure transactions, salt round for password hashing to enhance security, and the port on which the server listens for incoming requests.
+The project's configuration is securely stored in the `app/utils/config.js` file. It includes vital parameters such as the Firebase configuration, secret key for secure transactions, salt round for password hashing to enhance security, and the port on which the server listens for incoming requests.
+
+## Requirements
+
+- Node.js (v14 or higher)
+- npm or yarn
+- Redis (for caching, optional)
+- Firebase project account
+
+## Environment Variables
+
+- `PORT`: Server port number
+- `NODE_ENV`: Node environment (development, test, production)
+- `FIREBASE_API_KEY`: Firebase API key
+- `FIREBASE_AUTH_DOMAIN`: Firebase Auth domain
+- `FIREBASE_PROJECT_ID`: Firebase project ID
+- `FIREBASE_STORAGE_BUCKET`: Firebase storage bucket
+- `FIREBASE_MESSAGING_SENDER_ID`: Firebase messaging sender ID
+- `FIREBASE_APP_ID`: Firebase app ID
+- `FIREBASE_MEASUREMENT_ID`: Firebase measurement ID
+- `REDIS_URL`: Redis connection URL (optional)
+- `SALT_ROUND`: Salt round for password hashing
+- `SECRET_KEY`: Secret key for JWT
+
+## Installation
+
+1. Clone the repository
+2. Install dependencies with `npm install` or `yarn`
+3. Copy `.env.example` to `.env` and fill in the required values
+4. Start the development server with `npm run dev` or `yarn dev`
+
+## Testing
+
+To run tests, use `npm test` or `yarn test`.
 
 ## Deployment
 
@@ -28,15 +61,18 @@ The project's configuration is securely stored in the `app/utils/config.js` file
 
 1. **Prerequisites**
    - Netlify account
-   - MongoDB Atlas account (for database)
+   - Firebase project account
    - Redis Cloud account (for caching)
 
 2. **Environment Setup**
    Configure the following environment variables in Netlify:
-   - `MONGODB_URL`: MongoDB connection string
-   - `DB_NAME`: Database name
-   - `GATEWAY_SECRET_KEY`: Gateway secret key
-   - `SALT_ROUNDS`: Number of salt rounds for password hashing
+   - `FIREBASE_API_KEY`: Firebase API key
+   - `FIREBASE_AUTH_DOMAIN`: Firebase Auth domain
+   - `FIREBASE_PROJECT_ID`: Firebase project ID
+   - `FIREBASE_STORAGE_BUCKET`: Firebase storage bucket
+   - `FIREBASE_MESSAGING_SENDER_ID`: Firebase messaging sender ID
+   - `FIREBASE_APP_ID`: Firebase app ID
+   - `FIREBASE_MEASUREMENT_ID`: Firebase measurement ID
    - `REDIS_HOST`: Redis host
    - `REDIS_PORT`: Redis port
    - `REDIS_PASSWORD`: Redis password

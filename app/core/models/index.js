@@ -1,6 +1,5 @@
-const mongoose = require("mongoose");
-const logModel = require("./logs/index")(mongoose);
-const userModel = require("./user/index")(mongoose);
+const userModel = require("./user/index");
+const logModel = require("./logs/index");
 
 module.exports = {
   logModel,

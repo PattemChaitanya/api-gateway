@@ -1,37 +1,54 @@
-const mongoose = require("mongoose");
-const { MongoMemoryServer } = require("mongodb-memory-server");
+const { initializeApp } = require("firebase/app");
+const { getFirestore, terminate, collection, getDocs, deleteDoc } = require("firebase/firestore");
+const { connectFirestoreEmulator } = require("firebase/firestore");
 
-let mongod;
+let firestoreApp;
+let firestoreDb;
 
 /**
- * Connect to the in-memory database.
+ * Connect to the Firebase emulator.
  */
 module.exports.connect = async () => {
-  mongod = await MongoMemoryServer.create();
-  const uri = mongod.getUri();
-  await mongoose.connect(uri);
+  // Configure Firebase with test credentials
+  const firebaseConfig = {
+    projectId: "demo-test-project",
+  };
+
+  // Initialize Firebase app with a unique ID to avoid conflicts
+  firestoreApp = initializeApp(firebaseConfig, "test-" + Date.now());
+  firestoreDb = getFirestore(firestoreApp);
+
+  // Connect to Firestore emulator
+  connectFirestoreEmulator(firestoreDb, "localhost", 8080);
+
+  return firestoreDb;
 };
 
 /**
- * Drop database, close the connection and stop mongod.
+ * Close the Firestore connection.
  */
 module.exports.closeDatabase = async () => {
-  if (mongod) {
-    await mongoose.connection.dropDatabase();
-    await mongoose.connection.close();
-    await mongod.stop();
+  if (firestoreDb) {
+    await terminate(firestoreDb);
   }
 };
 
 /**
- * Remove all the data for all db collections.
+ * Remove all documents from all collections.
  */
 module.exports.clearDatabase = async () => {
-  if (mongod) {
-    const collections = mongoose.connection.collections;
-    for (const key in collections) {
-      const collection = collections[key];
-      await collection.deleteMany();
+  if (firestoreDb) {
+    // Get all collections
+    const collections = ["users", "logs", "recipes"]; // Add all your collection names here
+
+    for (const collectionName of collections) {
+      const collectionRef = collection(firestoreDb, collectionName);
+      const docs = await getDocs(collectionRef);
+
+      // Delete all documents in the collection
+      docs.forEach(async (doc) => {
+        await deleteDoc(doc.ref);
+      });
     }
   }
 };

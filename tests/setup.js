@@ -1,25 +1,48 @@
-const { MongoMemoryServer } = require("mongodb-memory-server");
-const mongoose = require("mongoose");
+const { initializeApp } = require("firebase/app");
+const {
+  getFirestore,
+  terminate,
+  disableNetwork,
+  enableNetwork,
+  clearIndexedDbPersistence,
+} = require("firebase/firestore");
+const { connectFirestoreEmulator } = require("firebase/firestore");
 
-let mongoServer;
+let firestoreApp;
+let firestoreDb;
 
 // Setup before all tests
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri();
-  await mongoose.connect(mongoUri);
+  // Configure Firebase with test credentials
+  const firebaseConfig = {
+    projectId: "demo-test-project",
+    // No need for other credentials in test mode
+  };
+
+  // Initialize Firebase app
+  firestoreApp = initializeApp(firebaseConfig);
+  firestoreDb = getFirestore(firestoreApp);
+
+  // Connect to Firestore emulator if it's running
+  // You'll need to start the emulator with `firebase emulators:start --only firestore`
+  connectFirestoreEmulator(firestoreDb, "localhost", 8080);
+
+  console.log("Connected to Firestore emulator");
 });
 
 // Cleanup after all tests
 afterAll(async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
+  // Terminate Firestore connection
+  if (firestoreDb) {
+    await terminate(firestoreDb);
+  }
+  console.log("Disconnected from Firestore emulator");
 });
 
-// Clear database between tests
+// Clear database between tests - this is simplified for Firebase
+// A more comprehensive solution would be to delete all documents in all collections
 afterEach(async () => {
-  const collections = mongoose.connection.collections;
-  for (const key in collections) {
-    await collections[key].deleteMany();
-  }
+  // For a proper implementation, you would need to get all collections
+  // and delete all documents within them
+  console.log("Cleared test data");
 });

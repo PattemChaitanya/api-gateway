@@ -1,75 +1,72 @@
-const mongoose = require("mongoose");
-const { MONGODB_URL, DB_NAME } = require("../../utils/config");
+const { getFirestore } = require("firebase/firestore");
+const FirebaseConfig = require("../../config/firebase");
 
 class DatabaseManager {
   constructor() {
-    this.url = MONGODB_URL;
-    this.dbName = DB_NAME;
-    this.connection = null;
+    this.isInitialized = false;
+    this.db = null;
   }
 
   /**
-   * Connect to MongoDB
+   * Connect to Firebase Firestore
    * @returns {Promise<void>}
    */
   async connect() {
     try {
-      this.connection = await mongoose.connect(`${this.url}/${this.dbName}`, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-      console.log("Connected to database");
+      if (!this.isInitialized) {
+        // Get Firestore instance from Firebase Config
+        this.db = FirebaseConfig.getInstance().getDb();
+        this.isInitialized = true;
+        console.log("Connected to Firebase Firestore database");
+      }
+      return this.db;
     } catch (error) {
-      console.error("Database connection error:", error);
+      console.error("Firebase database connection error:", error);
       throw error;
     }
   }
 
   /**
-   * Disconnect from MongoDB
+   * Disconnect from Firebase (mostly a no-op for Firebase)
    * @returns {Promise<void>}
    */
   async disconnect() {
     try {
-      await mongoose.disconnect();
-      console.log("Disconnected from database");
+      // Firebase handles connections internally, no explicit disconnect needed
+      console.log("Firebase connection released");
+      this.isInitialized = false;
     } catch (error) {
-      console.error("Database disconnection error:", error);
+      console.error("Firebase disconnection error:", error);
       throw error;
     }
   }
 
   /**
-   * Get mongoose connection
-   * @returns {mongoose.Connection}
+   * Get Firestore instance
+   * @returns {Object}
    */
   getConnection() {
-    return this.connection;
+    return this.db;
   }
 
   /**
-   * Check if connected to database
+   * Check if connected to Firebase
    * @returns {boolean}
    */
   isConnected() {
-    return mongoose.connection.readyState === 1;
+    return this.isInitialized;
   }
 
   /**
-   * Create indexes for collections
+   * Create indexes for collections - not directly supported in Firebase client SDK
+   * This is maintained for API compatibility but doesn't perform any operation
+   * Firebase indexes are managed in the Firebase console or using Firebase CLI
    * @param {Object} indexes - Collection indexes configuration
    * @returns {Promise<void>}
    */
   async createIndexes(indexes) {
-    try {
-      for (const [collection, fields] of Object.entries(indexes)) {
-        const model = mongoose.model(collection);
-        await model.createIndexes(fields);
-      }
-    } catch (error) {
-      console.error("Index creation error:", error);
-      throw error;
-    }
+    console.log("Firebase indexes should be managed in the Firebase console or using Firebase CLI");
+    return true;
   }
 }
 

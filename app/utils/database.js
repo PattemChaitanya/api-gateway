@@ -1,14 +1,13 @@
-const mongoose = require("mongoose");
+const FirebaseConfig = require("../config/firebase");
 
-async function connectToDatabase(uri) {
+async function connectToDatabase() {
   try {
-    await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.info("Successfully connected to database");
+    // Get the Firebase DB instance
+    const db = FirebaseConfig.getInstance().getDb();
+    console.info("Successfully connected to Firebase Firestore");
+    return db;
   } catch (error) {
-    console.error("Error connecting to database:", error);
+    console.error("Error connecting to Firebase Firestore:", error);
     throw error;
   }
 }

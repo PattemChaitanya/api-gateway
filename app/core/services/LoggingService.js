@@ -16,18 +16,18 @@ class LoggingService extends BaseService {
   getRequestLogger() {
     return (req, res, next) => {
       const start = Date.now();
-      
-      res.on('finish', () => {
+
+      res.on("finish", () => {
         const duration = Date.now() - start;
         this.logInfo(`${req.method} ${req.path} ${res.statusCode} ${duration}ms`, {
           method: req.method,
           path: req.path,
           statusCode: res.statusCode,
           duration,
-          requestId: req.id
+          requestId: req.id,
         });
       });
-      
+
       next();
     };
   }
@@ -55,12 +55,12 @@ class LoggingService extends BaseService {
       stack: error.stack,
       name: error.name,
       code: error.code,
-      service: context.service || "unknown"
+      service: context.service || "unknown",
     };
-    
+
     // Create log entry
-    const logEntry = this.log('error', error.message, errorMeta);
-    
+    const logEntry = this.log("error", error.message, errorMeta);
+
     // Also try to save to database if available
     try {
       if (this.logModel) {
@@ -69,7 +69,7 @@ class LoggingService extends BaseService {
     } catch (err) {
       console.error("Failed to save error log to database:", err);
     }
-    
+
     return logEntry;
   }
 
@@ -87,21 +87,21 @@ class LoggingService extends BaseService {
         }
         return await this.logModel.getLogs(filters, limit, skip);
       }
-      
+
       // Fallback to in-memory logs if no database
       let filteredLogs = [...this.logs];
-      
+
       // Apply filters
       if (filters.level) {
-        filteredLogs = filteredLogs.filter(log => log.level === filters.level);
+        filteredLogs = filteredLogs.filter((log) => log.level === filters.level);
       }
       if (filters.service) {
-        filteredLogs = filteredLogs.filter(log => log.service === filters.service);
+        filteredLogs = filteredLogs.filter((log) => log.service === filters.service);
       }
-      
+
       // Sort by timestamp descending
       filteredLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      
+
       // Apply pagination
       return filteredLogs.slice(skip, skip + limit);
     } catch (error) {
@@ -121,7 +121,7 @@ class LoggingService extends BaseService {
         level: "info",
         type: "metrics",
       },
-      metrics,
+      metrics
     );
 
     try {
@@ -145,24 +145,24 @@ class LoggingService extends BaseService {
       timestamp: new Date().toISOString(),
       level,
       message,
-      ...meta
+      ...meta,
     };
-    
+
     // Log to console
-    if (level === 'error') {
+    if (level === "error") {
       console.error(JSON.stringify(logEntry));
     } else {
       console.log(JSON.stringify(logEntry));
     }
-    
+
     // Keep in-memory copy
     this.logs.push(logEntry);
-    
+
     // Keep logs array from growing too large
     if (this.logs.length > 1000) {
       this.logs.shift();
     }
-    
+
     return logEntry;
   }
 
@@ -173,7 +173,7 @@ class LoggingService extends BaseService {
    * @returns {Object} The log entry
    */
   logInfo(message, meta = {}) {
-    return this.log('info', message, meta);
+    return this.log("info", message, meta);
   }
 
   /**
@@ -183,7 +183,7 @@ class LoggingService extends BaseService {
    * @returns {Object} The log entry
    */
   logWarning(message, meta = {}) {
-    return this.log('warning', message, meta);
+    return this.log("warning", message, meta);
   }
 }
 

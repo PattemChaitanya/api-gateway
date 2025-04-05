@@ -5,9 +5,9 @@ const { REDIS_CONFIG } = require("./config");
 bluebird.promisifyAll(redis);
 
 const redisClient = redis.createClient({
-  host: REDIS_CONFIG.host,
-  port: REDIS_CONFIG.port,
-  password: REDIS_CONFIG.password,
+  host: REDIS_CONFIG?.host || "localhost",
+  port: REDIS_CONFIG?.port || 6379,
+  password: REDIS_CONFIG?.password || null,
 });
 
 redisClient.on("error", (err) => {

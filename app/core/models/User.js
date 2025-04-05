@@ -1,69 +1,22 @@
-const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const { SALT_ROUND } = require("../../utils/config");
+const FirebaseConfig = require("../../config/firebase");
+const {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+} = require("firebase/firestore");
 
 class User {
   constructor() {
-    this.schema = new mongoose.Schema({
-      username: {
-        type: String,
-        required: true,
-        unique: true,
-      },
-      email: {
-        type: String,
-        required: true,
-        unique: true,
-      },
-      password: {
-        type: String,
-        required: true,
-      },
-      apiKey: {
-        type: String,
-        unique: true,
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now,
-      },
-      updatedAt: {
-        type: Date,
-        default: Date.now,
-      },
-    });
-
-    // Add pre-save middleware
-    this.schema.pre("save", async function (next) {
-      if (this.isModified("password")) {
-        this.password = await bcrypt.hash(this.password, SALT_ROUND);
-      }
-      this.updatedAt = new Date();
-      next();
-    });
-
-    // Add instance methods
-    this.schema.methods.comparePassword = async function (candidatePassword) {
-      return bcrypt.compare(candidatePassword, this.password);
-    };
-
-    this.schema.methods.generateApiKey = async function () {
-      this.apiKey = await bcrypt.hash(this._id.toString(), SALT_ROUND);
-      await this.save();
-      return this.apiKey;
-    };
-
-    // Add static methods
-    this.schema.statics.findByEmail = function (email) {
-      return this.findOne({ email });
-    };
-
-    this.schema.statics.findByApiKey = function (apiKey) {
-      return this.findOne({ apiKey });
-    };
-
-    // Create the model
-    this.model = mongoose.model("User", this.schema);
+    this.db = FirebaseConfig.getInstance().getDb();
+    this.collectionName = "users";
   }
 
   /**
@@ -72,9 +25,32 @@ class User {
    * @returns {Promise<Object>}
    */
   async create(userData) {
-    const user = new this.model(userData);
-    await user.generateApiKey();
-    return user.save();
+    try {
+      // Hash password
+      if (userData.password) {
+        userData.password = await bcrypt.hash(userData.password, SALT_ROUND);
+      }
+
+      // Add timestamps
+      userData.createdAt = new Date().toISOString();
+      userData.updatedAt = new Date().toISOString();
+
+      // Generate API key
+      const tempId = new Date().getTime().toString();
+      userData.apiKey = await bcrypt.hash(tempId, SALT_ROUND);
+
+      // Add to Firestore
+      const usersRef = collection(this.db, this.collectionName);
+      const docRef = await addDoc(usersRef, userData);
+
+      return {
+        id: docRef.id,
+        ...userData,
+      };
+    } catch (error) {
+      console.error("Error creating user:", error);
+      throw error;
+    }
   }
 
   /**
@@ -83,7 +59,22 @@ class User {
    * @returns {Promise<Object>}
    */
   async findById(id) {
-    return this.model.findById(id);
+    try {
+      const docRef = doc(this.db, this.collectionName, id);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        return {
+          id: docSnap.id,
+          ...docSnap.data(),
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error(`Error finding user ${id}:`, error);
+      return null;
+    }
   }
 
   /**
@@ -92,7 +83,50 @@ class User {
    * @returns {Promise<Object>}
    */
   async findByEmail(email) {
-    return this.model.findByEmail(email);
+    try {
+      const usersRef = collection(this.db, this.collectionName);
+      const q = query(usersRef, where("email", "==", email));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const docData = querySnapshot.docs[0];
+        return {
+          id: docData.id,
+          ...docData.data(),
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error(`Error finding user by email ${email}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Find user by API key
+   * @param {string} apiKey - API key
+   * @returns {Promise<Object>}
+   */
+  async findByApiKey(apiKey) {
+    try {
+      const usersRef = collection(this.db, this.collectionName);
+      const q = query(usersRef, where("apiKey", "==", apiKey));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const docData = querySnapshot.docs[0];
+        return {
+          id: docData.id,
+          ...docData.data(),
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error finding user by API key:", error);
+      return null;
+    }
   }
 
   /**
@@ -102,19 +136,55 @@ class User {
    * @returns {Promise<Object>}
    */
   async update(id, updateData) {
-    return this.model.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
+    try {
+      // Update timestamp
+      updateData.updatedAt = new Date().toISOString();
+
+      const docRef = doc(this.db, this.collectionName, id);
+      await updateDoc(docRef, updateData);
+
+      // Get updated document
+      const updatedDoc = await getDoc(docRef);
+
+      return {
+        id: updatedDoc.id,
+        ...updatedDoc.data(),
+      };
+    } catch (error) {
+      console.error(`Error updating user ${id}:`, error);
+      throw error;
+    }
   }
 
   /**
    * Delete user
    * @param {string} id - User ID
-   * @returns {Promise<Object>}
+   * @returns {Promise<boolean>}
    */
   async delete(id) {
-    return this.model.findByIdAndDelete(id);
+    try {
+      const docRef = doc(this.db, this.collectionName, id);
+      await deleteDoc(docRef);
+      return true;
+    } catch (error) {
+      console.error(`Error deleting user ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Compare password
+   * @param {Object} user - User object
+   * @param {string} candidatePassword - Password to compare
+   * @returns {Promise<boolean>}
+   */
+  async comparePassword(user, candidatePassword) {
+    try {
+      return await bcrypt.compare(candidatePassword, user.password);
+    } catch (error) {
+      console.error("Error comparing password:", error);
+      return false;
+    }
   }
 }
 

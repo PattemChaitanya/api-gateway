@@ -6,8 +6,8 @@ const swaggerSpec = require("./config/swagger");
 const { PORT } = require("./utils/config");
 const firebaseManager = require("./core/database/FirebaseManager");
 const UserService = require("./core/services/UserService");
-const CacheManager = require("./core/cache/CacheManager");
-const LoggingService = require("./core/services/LoggingService");
+// const CacheManager = require("./core/cache/CacheManager");
+const { LoggingService } = require("./core/services/LoggingService");
 const MonitoringService = require("./core/services/MonitoringService");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
@@ -17,7 +17,7 @@ class Server {
     this.app = express();
     this.port = PORT;
     this.services = {};
-    this.cacheManager = new CacheManager("api-gateway");
+    // this.cacheManager = new CacheManager("api-gateway");
     this.loggingService = new LoggingService();
     this.monitoringService = new MonitoringService(this.loggingService);
     this.server = null;
@@ -95,7 +95,7 @@ class Server {
 
   initializeServices() {
     this.services.user = new UserService({
-      cacheManager: this.cacheManager,
+      // cacheManager: this.cacheManager,
     });
   }
 
@@ -113,13 +113,26 @@ class Server {
     this.app.get("/metrics", async (req, res) => {
       try {
         const metrics = await this.monitoringService.getSystemMetrics();
-        res.json(metrics);
+
+        // Log metrics to Firestore via LoggingService
+        await this.loggingService.logMetrics({
+          type: "metrics_request",
+          data: metrics,
+        });
+
+        res.json({
+          success: true,
+          data: metrics,
+        });
       } catch (error) {
         this.loggingService.logError(error, {
           requestId: req.id,
           service: "monitoring",
         });
-        res.status(500).json(this.services.user.handleError(error));
+        res.status(500).json({
+          success: false,
+          error: error.message || "Failed to retrieve metrics",
+        });
       }
     });
 
@@ -132,14 +145,25 @@ class Server {
         if (level) filters.level = level;
         if (type) filters.type = type;
 
-        const logs = await this.loggingService.getLogs(filters, limit, skip);
-        res.json(logs);
+        // Parse numeric parameters
+        const parsedLimit = parseInt(limit, 10) || 100;
+        const parsedSkip = parseInt(skip, 10) || 0;
+
+        const logs = await this.loggingService.getLogs(filters, parsedLimit, parsedSkip);
+        res.json({
+          success: true,
+          count: logs.length,
+          data: logs,
+        });
       } catch (error) {
         this.loggingService.logError(error, {
           requestId: req.id,
           service: "logging",
         });
-        res.status(500).json(this.services.user.handleError(error));
+        res.status(500).json({
+          success: false,
+          error: error.message || "Failed to retrieve logs",
+        });
       }
     });
 
@@ -147,52 +171,98 @@ class Server {
     this.app.get("/user/:id", async (req, res) => {
       try {
         const result = await this.services.user.processRequest(req);
-        res.json(this.services.user.transformResponse(result));
+        res.json({
+          success: true,
+          data: this.services.user.transformResponse(result),
+        });
       } catch (error) {
         this.loggingService.logError(error, {
           requestId: req.id,
           service: "user",
         });
-        res.status(500).json(this.services.user.handleError(error));
+        res.status(500).json({
+          success: false,
+          error: error.message || "Failed to process user request",
+        });
       }
     });
 
     this.app.post("/user", async (req, res) => {
       try {
         const result = await this.services.user.processRequest(req);
-        res.json(this.services.user.transformResponse(result));
+        res.json({
+          success: true,
+          data: this.services.user.transformResponse(result),
+        });
       } catch (error) {
         this.loggingService.logError(error, {
           requestId: req.id,
           service: "user",
         });
-        res.status(500).json(this.services.user.handleError(error));
+        res.status(500).json({
+          success: false,
+          error: error.message || "Failed to process user request",
+        });
       }
     });
   }
 
   async start() {
     try {
+      // Initialize Firebase connection
       await firebaseManager.connect();
+
+      // Log server startup
+      this.loggingService.logInfo("Server starting", {
+        service: "system",
+        type: "startup",
+        port: this.port,
+      });
+
       this.server = this.app.listen(this.port, () => {
         console.info(`Server running on http://localhost:${this.port}`);
-        // this.monitoringService.logMetrics();
+
+        // Log server metrics on startup
+        this.monitoringService.logMetrics();
+
+        // Set up periodic metrics logging
+        setInterval(
+          () => {
+            this.monitoringService.logMetrics();
+          },
+          5 * 60 * 1000
+        ); // Log every 5 minutes
       });
+
       return this.server;
     } catch (error) {
       console.error("Failed to start server:", error);
+      this.loggingService.logError(error, {
+        service: "system",
+        type: "startup_error",
+      });
       throw new Error("Server startup failed");
     }
   }
 
   async stop() {
     try {
+      // Log server shutdown
+      this.loggingService.logInfo("Server shutting down", {
+        service: "system",
+        type: "shutdown",
+      });
+
       if (this.server) {
         await new Promise((resolve) => {
           this.server.close(resolve);
         });
       }
+
+      // Clean up Firebase connection
       await firebaseManager.disconnect();
+
+      console.info("Server successfully shut down");
     } catch (error) {
       console.error("Error during shutdown:", error);
       throw new Error("Server shutdown failed");
