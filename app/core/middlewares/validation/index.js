@@ -55,7 +55,10 @@ const serviceValidationRules = {
   ],
 
   update: [
-    param("id").isMongoId().withMessage("Invalid service ID"),
+    param("id")
+      .isString()
+      .matches(/^[a-zA-Z0-9-_]+$/)
+      .withMessage("Invalid service ID"),
     body("name")
       .optional()
       .trim()
