@@ -1,12 +1,12 @@
-const FirebaseConfig = require('../../config/firebase');
-const { collection, addDoc, query, orderBy, limit, where, getDocs } = require('firebase/firestore');
+const FirebaseConfig = require("../../config/firebase");
+const { collection, addDoc, query, orderBy, limit, where, getDocs } = require("firebase/firestore");
 
 /**
  * Logs model for Firebase Firestore
  */
 class Log {
   static logs = [];
-  static collectionName = 'logs';
+  static collectionName = "logs";
   
   /**
    * Get Firestore DB instance
@@ -42,13 +42,13 @@ class Log {
         const logsRef = collection(db, Log.collectionName);
         await addDoc(logsRef, logEntry);
       } catch (err) {
-        console.error('Failed to save log to Firestore:', err);
+        console.error("Failed to save log to Firestore:", err);
         // Continue with in-memory logs even if Firestore fails
       }
       
       return logEntry;
     } catch (error) {
-      console.error('Failed to add log:', error);
+      console.error("Failed to add log:", error);
       return logEntry; // Return the log even if saving fails
     }
   }
@@ -68,17 +68,17 @@ class Log {
       // Build query
       let q = query(
         logsRef,
-        orderBy('timestamp', 'desc'),
-        limit(limitCount + skip)
+        orderBy("timestamp", "desc"),
+        limit(limitCount + skip),
       );
       
       // Add filters if provided
       if (filters.level) {
-        q = query(q, where('level', '==', filters.level));
+        q = query(q, where("level", "==", filters.level));
       }
       
       if (filters.type) {
-        q = query(q, where('type', '==', filters.type));
+        q = query(q, where("type", "==", filters.type));
       }
       
       // Execute query
@@ -87,13 +87,13 @@ class Log {
       // Format results
       const logs = querySnapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
       
       // Apply skip (Firestore doesn't support offset directly)
       return logs.slice(skip);
     } catch (error) {
-      console.error('Failed to retrieve logs from Firestore:', error);
+      console.error("Failed to retrieve logs from Firestore:", error);
       
       // Fallback to in-memory logs
       let filteredLogs = [...Log.logs];
@@ -130,9 +130,9 @@ class Log {
       // Build query
       const q = query(
         logsRef,
-        where('service', '==', service),
-        orderBy('timestamp', 'desc'),
-        limit(limitCount + skip)
+        where("service", "==", service),
+        orderBy("timestamp", "desc"),
+        limit(limitCount + skip),
       );
       
       // Execute query
@@ -141,7 +141,7 @@ class Log {
       // Format results
       const logs = querySnapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
       
       // Apply skip (Firestore doesn't support offset directly)

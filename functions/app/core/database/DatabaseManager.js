@@ -1,4 +1,3 @@
-const { getFirestore } = require("firebase/firestore");
 const FirebaseConfig = require("../../config/firebase");
 
 class DatabaseManager {
@@ -17,7 +16,7 @@ class DatabaseManager {
         // Get Firestore instance from Firebase Config
         this.db = FirebaseConfig.getInstance().getDb();
         this.isInitialized = true;
-        console.log("Connected to Firebase Firestore database");
+        console.warn("Connected to Firebase Firestore database");
       }
       return this.db;
     } catch (error) {
@@ -33,7 +32,7 @@ class DatabaseManager {
   async disconnect() {
     try {
       // Firebase handles connections internally, no explicit disconnect needed
-      console.log("Firebase connection released");
+      console.warn("Firebase connection released");
       this.isInitialized = false;
     } catch (error) {
       console.error("Firebase disconnection error:", error);
@@ -65,7 +64,9 @@ class DatabaseManager {
    * @returns {Promise<void>}
    */
   async createIndexes(indexes) {
-    console.log("Firebase indexes should be managed in the Firebase console or using Firebase CLI");
+    console.warn(
+      "Firebase indexes should be managed in the Firebase console or using Firebase CLI"
+    );
     return true;
   }
 }

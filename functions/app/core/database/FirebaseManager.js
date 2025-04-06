@@ -1,5 +1,4 @@
-const { getFirestore } = require('firebase/firestore');
-const FirebaseConfig = require('../../config/firebase');
+const FirebaseConfig = require("../../config/firebase");
 
 /**
  * Firebase Database Manager
@@ -21,12 +20,12 @@ class FirebaseManager {
         // Get Firestore instance from Firebase Config
         this.db = FirebaseConfig.getInstance().getDb();
         this.isInitialized = true;
-        console.info('Connected to Firebase Firestore');
+        console.info("Connected to Firebase Firestore");
       }
       return this.db;
     } catch (error) {
-      console.error('Failed to connect to Firebase:', error);
-      throw new Error('Database connection failed');
+      console.error("Failed to connect to Firebase:", error);
+      throw new Error("Database connection failed");
     }
   }
 
@@ -37,7 +36,7 @@ class FirebaseManager {
   async disconnect() {
     // Firebase handles connections internally, no explicit disconnect needed
     // This method exists for compatibility with the previous MongoDB manager
-    console.info('Firebase connection released');
+    console.info("Firebase connection released");
     this.isInitialized = false;
     return true;
   }
@@ -48,7 +47,7 @@ class FirebaseManager {
    */
   getDb() {
     if (!this.isInitialized) {
-      throw new Error('Database not initialized. Call connect() first.');
+      throw new Error("Database not initialized. Call connect() first.");
     }
     return this.db;
   }
@@ -64,4 +63,4 @@ class FirebaseManager {
 
 // Create singleton instance
 const firebaseManager = new FirebaseManager();
-module.exports = firebaseManager; 
+module.exports = firebaseManager;

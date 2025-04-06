@@ -1,5 +1,4 @@
 const DatabaseManager = require("../../../app/core/database/DatabaseManager");
-const { getFirestore } = require("firebase/firestore");
 const FirebaseConfig = require("../../../app/config/firebase");
 
 // Mock Firebase configuration

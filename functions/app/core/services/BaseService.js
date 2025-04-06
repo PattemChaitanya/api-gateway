@@ -34,8 +34,8 @@ class BaseService {
   handleError(error) {
     return {
       error: true,
-      message: error.message || 'An unknown error occurred',
-      code: error.code || 'UNKNOWN_ERROR'
+      message: error.message || "An unknown error occurred",
+      code: error.code || "UNKNOWN_ERROR",
     };
   }
 
@@ -47,7 +47,7 @@ class BaseService {
   transformResponse(data) {
     return {
       success: true,
-      data
+      data,
     };
   }
 }

@@ -1,11 +1,5 @@
 const { initializeApp } = require("firebase/app");
-const {
-  getFirestore,
-  terminate,
-  disableNetwork,
-  enableNetwork,
-  clearIndexedDbPersistence,
-} = require("firebase/firestore");
+const { getFirestore, terminate } = require("firebase/firestore");
 const { connectFirestoreEmulator } = require("firebase/firestore");
 
 let firestoreApp;
@@ -27,7 +21,7 @@ beforeAll(async () => {
   // You'll need to start the emulator with `firebase emulators:start --only firestore`
   connectFirestoreEmulator(firestoreDb, "localhost", 8080);
 
-  console.log("Connected to Firestore emulator");
+  console.warn("Connected to Firestore emulator");
 });
 
 // Cleanup after all tests
@@ -36,7 +30,7 @@ afterAll(async () => {
   if (firestoreDb) {
     await terminate(firestoreDb);
   }
-  console.log("Disconnected from Firestore emulator");
+  console.warn("Disconnected from Firestore emulator");
 });
 
 // Clear database between tests - this is simplified for Firebase
@@ -44,5 +38,5 @@ afterAll(async () => {
 afterEach(async () => {
   // For a proper implementation, you would need to get all collections
   // and delete all documents within them
-  console.log("Cleared test data");
+  console.warn("Cleared test data");
 });

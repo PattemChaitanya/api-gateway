@@ -14,12 +14,12 @@ const swaggerJsonPath = path.join(publicDir, "swagger.json");
 // Ensure public directory exists
 if (!fs.existsSync(publicDir)) {
   fs.mkdirSync(publicDir, { recursive: true });
-  console.log("Created public directory");
+  console.warn("Created public directory");
 }
 
 // Write Swagger JSON to public directory for static serving
 fs.writeFileSync(swaggerJsonPath, JSON.stringify(swaggerConfig, null, 2));
-console.log("Generated swagger.json for static hosting");
+console.warn("Generated swagger.json for static hosting");
 
 // Check if Swagger custom CSS exists, if not create a basic one
 const customCssPath = path.join(publicDir, "swagger-custom.css");
@@ -63,7 +63,7 @@ if (!fs.existsSync(customCssPath)) {
 }
 `;
   fs.writeFileSync(customCssPath, basicCss);
-  console.log("Created swagger-custom.css template");
+  console.warn("Created swagger-custom.css template");
 }
 
-console.log("Swagger setup completed successfully!");
+console.warn("Swagger setup completed successfully!");

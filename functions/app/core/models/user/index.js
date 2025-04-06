@@ -1,6 +1,6 @@
-const bcrypt = require('bcrypt');
-const FirebaseConfig = require('../../../config/firebase');
-const { collection, doc, getDoc, getDocs, query, where, addDoc, updateDoc, deleteDoc } = require('firebase/firestore');
+const bcrypt = require("bcrypt");
+const FirebaseConfig = require("../../../config/firebase");
+const { collection, doc, getDoc, getDocs, query, where, addDoc, updateDoc, deleteDoc } = require("firebase/firestore");
 
 /**
  * User model for Firebase Firestore
@@ -8,12 +8,12 @@ const { collection, doc, getDoc, getDocs, query, where, addDoc, updateDoc, delet
 class User {
   constructor(data = {}) {
     this.id = data.id || null;
-    this.username = data.username || '';
-    this.email = data.email || '';
-    this.password = data.password || '';
-    this.firstName = data.firstName || '';
-    this.lastName = data.lastName || '';
-    this.role = data.role || 'user';
+    this.username = data.username || "";
+    this.email = data.email || "";
+    this.password = data.password || "";
+    this.firstName = data.firstName || "";
+    this.lastName = data.lastName || "";
+    this.role = data.role || "user";
     this.isActive = data.isActive !== undefined ? data.isActive : true;
     this.createdAt = data.createdAt || new Date().toISOString();
     this.updatedAt = data.updatedAt || new Date().toISOString();
@@ -21,7 +21,7 @@ class User {
     
     // Firebase reference
     this.db = FirebaseConfig.getInstance().getDb();
-    this.collectionName = 'users';
+    this.collectionName = "users";
   }
 
   /**
@@ -40,13 +40,13 @@ class User {
   static async findById(id) {
     try {
       const db = FirebaseConfig.getInstance().getDb();
-      const docRef = doc(db, 'users', id);
+      const docRef = doc(db, "users", id);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
         return new User({
           id: docSnap.id,
-          ...docSnap.data()
+          ...docSnap.data(),
         });
       }
       
@@ -65,7 +65,7 @@ class User {
   static async findByEmail(email) {
     try {
       const db = FirebaseConfig.getInstance().getDb();
-      const usersRef = collection(db, 'users');
+      const usersRef = collection(db, "users");
       const q = query(usersRef, where("email", "==", email));
       const querySnapshot = await getDocs(q);
       
@@ -73,7 +73,7 @@ class User {
         const docData = querySnapshot.docs[0];
         return new User({
           id: docData.id,
-          ...docData.data()
+          ...docData.data(),
         });
       }
       
@@ -98,7 +98,7 @@ class User {
       }
       
       const db = FirebaseConfig.getInstance().getDb();
-      const usersRef = collection(db, 'users');
+      const usersRef = collection(db, "users");
       
       // Add timestamp
       userData.createdAt = new Date().toISOString();
@@ -108,10 +108,10 @@ class User {
       
       return new User({
         id: docRef.id,
-        ...userData
+        ...userData,
       });
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error("Error creating user:", error);
       throw error;
     }
   }
@@ -123,7 +123,7 @@ class User {
   async save() {
     try {
       if (!this.id) {
-        throw new Error('Cannot update user without ID');
+        throw new Error("Cannot update user without ID");
       }
       
       // Don't save the db reference
@@ -149,7 +149,7 @@ class User {
   async delete() {
     try {
       if (!this.id) {
-        throw new Error('Cannot delete user without ID');
+        throw new Error("Cannot delete user without ID");
       }
       
       const docRef = doc(this.db, this.collectionName, this.id);
@@ -171,7 +171,7 @@ class User {
     try {
       return await bcrypt.compare(candidatePassword, this.password);
     } catch (error) {
-      console.error('Error comparing password:', error);
+      console.error("Error comparing password:", error);
       return false;
     }
   }

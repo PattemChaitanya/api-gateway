@@ -1,5 +1,4 @@
 const BaseService = require("./BaseService");
-const os = require("os");
 
 class MonitoringService extends BaseService {
   constructor(loggingService) {
@@ -20,7 +19,7 @@ class MonitoringService extends BaseService {
    */
   getSystemMetrics() {
     const uptime = Math.floor((Date.now() - this.metrics.startTime) / 1000);
-    
+
     const requestCount = this.requests.length;
     const statusCodes = this.requests.reduce((acc, req) => {
       acc[req.statusCode] = (acc[req.statusCode] || 0) + 1;
@@ -31,9 +30,9 @@ class MonitoringService extends BaseService {
       uptime,
       requests: {
         total: requestCount,
-        statusCodes
+        statusCodes,
       },
-      memory: process.memoryUsage()
+      memory: process.memoryUsage(),
     };
   }
 
@@ -48,7 +47,7 @@ class MonitoringService extends BaseService {
       path: req.path,
       method: req.method,
       statusCode: res?.statusCode || 200,
-      timestamp: requestTime
+      timestamp: requestTime,
     });
 
     // Keep only the last 100 requests
@@ -95,9 +94,9 @@ class MonitoringService extends BaseService {
    */
   getHealthStatus() {
     return {
-      status: 'healthy',
+      status: "healthy",
       uptime: Math.floor((Date.now() - this.metrics.startTime) / 1000),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }

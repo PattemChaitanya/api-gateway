@@ -11,7 +11,7 @@ const { LoggingService } = require("./core/services/LoggingService");
 const MonitoringService = require("./core/services/MonitoringService");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
-const { recipeRouter, monitoringRouter } = require("./routes");
+const { recipeRouter, monitoringRouter, redditRouter } = require("./routes");
 
 class Server {
   constructor() {
@@ -45,6 +45,7 @@ class Server {
         optionsSuccessStatus: 204,
       })
     );
+
     this.app.use(bodyParser.json());
 
     // Serve static files
@@ -99,74 +100,6 @@ class Server {
   }
 
   setupRoutes() {
-    // Health check with enhanced metrics
-    // this.app.get("/health", (req, res) => {
-    //   const healthStatus = this.monitoringService.getHealthStatus();
-    //   const response = Object.assign({}, healthStatus, {
-    //     database: firebaseManager.isConnected() ? "connected" : "disconnected",
-    //   });
-    //   res.json(response);
-    // });
-
-    // Monitoring metrics endpoint
-    // this.app.get("/metrics", async (req, res) => {
-    //   try {
-    //     const metrics = await this.monitoringService.getSystemMetrics();
-
-    //     // Log metrics to Firestore via LoggingService
-    //     await this.loggingService.logMetrics({
-    //       type: "metrics_request",
-    //       data: metrics,
-    //     });
-
-    //     res.json({
-    //       success: true,
-    //       data: metrics,
-    //     });
-    //   } catch (error) {
-    //     this.loggingService.logError(error, {
-    //       requestId: req.id,
-    //       service: "monitoring",
-    //     });
-    //     res.status(500).json({
-    //       success: false,
-    //       error: error.message || "Failed to retrieve metrics",
-    //     });
-    //   }
-    // });
-
-    // Logs endpoint
-    // this.app.get("/logs", async (req, res) => {
-    //   try {
-    //     const { service, level, type, limit = 100, skip = 0 } = req.query;
-    //     const filters = {};
-    //     if (service) filters.service = service;
-    //     if (level) filters.level = level;
-    //     if (type) filters.type = type;
-
-    //     // Parse numeric parameters
-    //     const parsedLimit = parseInt(limit, 10) || 100;
-    //     const parsedSkip = parseInt(skip, 10) || 0;
-
-    //     const logs = await this.loggingService.getLogs(filters, parsedLimit, parsedSkip);
-    //     res.json({
-    //       success: true,
-    //       count: logs.length,
-    //       data: logs,
-    //     });
-    //   } catch (error) {
-    //     this.loggingService.logError(error, {
-    //       requestId: req.id,
-    //       service: "logging",
-    //     });
-    //     res.status(500).json({
-    //       success: false,
-    //       error: error.message || "Failed to retrieve logs",
-    //     });
-    //   }
-    // });
-
-    // User routes with enhanced error handling
     this.app.get("/user/:id", async (req, res) => {
       try {
         const result = await this.services.user.processRequest(req);
@@ -206,9 +139,13 @@ class Server {
     });
 
     // Recipe routes
-    // this.app.use("/api/v1", { ...recipeRouter, ...monitoringRouter });
     this.app.use("/api/v1", recipeRouter);
+
+    // Monitoring routes
     this.app.use("/api/monitoring", monitoringRouter);
+
+    // Reddit routes
+    this.app.use("/api/v1", redditRouter);
   }
 
   async start() {
@@ -296,3 +233,5 @@ server.start().catch((error) => {
   console.error("Failed to start server:", error);
   process.exit(1);
 });
+
+module.exports = server;

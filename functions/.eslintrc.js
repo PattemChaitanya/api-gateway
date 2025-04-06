@@ -19,7 +19,7 @@ module.exports = {
     "no-useless-escape": "warn",
     "object-curly-spacing": ["error", "always"],
     "comma-dangle": [
-      "fix",
+      "warn",
       {
         arrays: "always-multiline",
         objects: "always-multiline",

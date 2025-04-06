@@ -3,7 +3,6 @@ const {
   getDocs,
   query,
   limit,
-  startAfter,
   where,
   doc,
   getDoc,

@@ -25,7 +25,7 @@
   "engines": {
     "node": "18"
   },
-  "main": "app/server.js",
+  "main": "index.js",
   "dependencies": {
     "axios": "^1.6.8",
     "bcrypt": "^5.1.1",

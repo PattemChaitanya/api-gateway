@@ -1,6 +1,5 @@
 const BaseService = require("./BaseService");
 const Log = require("../models/logs");
-const morgan = require("morgan");
 
 class LoggingService extends BaseService {
   constructor() {
@@ -152,7 +151,7 @@ class LoggingService extends BaseService {
     if (level === "error") {
       console.error(JSON.stringify(logEntry));
     } else {
-      console.log(JSON.stringify(logEntry));
+      console.warn(JSON.stringify(logEntry));
     }
 
     // Keep in-memory copy
