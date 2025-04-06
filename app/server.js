@@ -51,24 +51,24 @@ class Server {
     this.app.use("/public", express.static(path.join(__dirname, "../public")));
 
     // Add request logging
-    // this.app.use(this.loggingService.getRequestLogger());
+    this.app.use(this.loggingService.getRequestLogger());
 
     // Add request monitoring
-    // this.app.use((req, res, next) => {
-    //   res.on("finish", () => {
-    //     this.monitoringService.trackRequest(req, res);
-    //   });
-    //   next();
-    // });
+    this.app.use((req, res, next) => {
+      res.on("finish", () => {
+        this.monitoringService.trackRequest(req, res);
+      });
+      next();
+    });
 
     // Add error handling middleware
-    // this.app.use((err, req, res, next) => {
-    //   this.loggingService.logError(err, {
-    //     requestId: req.id,
-    //     service: req.headers["app_id"],
-    //   });
-    //   next(err);
-    // });
+    this.app.use((err, req, res, next) => {
+      this.loggingService.logError(err, {
+        requestId: req.id,
+        service: req.headers["app_id"],
+      });
+      next(err);
+    });
   }
 
   setupSwagger() {
@@ -264,7 +264,6 @@ class Server {
         const mockEvent = {
           queryStringParameters: req.query,
         };
-        console.log("mockEvent", mockEvent);
         const response = await recipeHandlers.handleSearchRecipes(mockEvent);
         res.status(response.statusCode).json(JSON.parse(response.body));
       } catch (error) {
