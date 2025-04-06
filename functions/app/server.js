@@ -11,7 +11,7 @@ const { LoggingService } = require("./core/services/LoggingService");
 const MonitoringService = require("./core/services/MonitoringService");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
-const RecipeHandlers = require("./handlers/recipeHandlers");
+const { recipeRouter, monitoringRouter } = require("./routes");
 
 class Server {
   constructor() {
@@ -72,15 +72,6 @@ class Server {
   }
 
   setupSwagger() {
-    // Serve Swagger documentation as the homepage
-    // this.app.use("/", (req, res, next) => {
-    //   // Only redirect if accessing the root path
-    //   if (req.path === "/") {
-    //     return res.redirect("/api-docs");
-    //   }
-    //   next();
-    // });
-
     // Serve Swagger UI
     this.app.use(
       "/api-docs",
@@ -99,12 +90,6 @@ class Server {
         },
       })
     );
-
-    // Serve Swagger JSON
-    this.app.get("/swagger.json", (req, res) => {
-      res.setHeader("Content-Type", "application/json");
-      res.send(swaggerSpec);
-    });
   }
 
   initializeServices() {
@@ -115,71 +100,71 @@ class Server {
 
   setupRoutes() {
     // Health check with enhanced metrics
-    this.app.get("/health", (req, res) => {
-      const healthStatus = this.monitoringService.getHealthStatus();
-      const response = Object.assign({}, healthStatus, {
-        database: firebaseManager.isConnected() ? "connected" : "disconnected",
-      });
-      res.json(response);
-    });
+    // this.app.get("/health", (req, res) => {
+    //   const healthStatus = this.monitoringService.getHealthStatus();
+    //   const response = Object.assign({}, healthStatus, {
+    //     database: firebaseManager.isConnected() ? "connected" : "disconnected",
+    //   });
+    //   res.json(response);
+    // });
 
     // Monitoring metrics endpoint
-    this.app.get("/metrics", async (req, res) => {
-      try {
-        const metrics = await this.monitoringService.getSystemMetrics();
+    // this.app.get("/metrics", async (req, res) => {
+    //   try {
+    //     const metrics = await this.monitoringService.getSystemMetrics();
 
-        // Log metrics to Firestore via LoggingService
-        await this.loggingService.logMetrics({
-          type: "metrics_request",
-          data: metrics,
-        });
+    //     // Log metrics to Firestore via LoggingService
+    //     await this.loggingService.logMetrics({
+    //       type: "metrics_request",
+    //       data: metrics,
+    //     });
 
-        res.json({
-          success: true,
-          data: metrics,
-        });
-      } catch (error) {
-        this.loggingService.logError(error, {
-          requestId: req.id,
-          service: "monitoring",
-        });
-        res.status(500).json({
-          success: false,
-          error: error.message || "Failed to retrieve metrics",
-        });
-      }
-    });
+    //     res.json({
+    //       success: true,
+    //       data: metrics,
+    //     });
+    //   } catch (error) {
+    //     this.loggingService.logError(error, {
+    //       requestId: req.id,
+    //       service: "monitoring",
+    //     });
+    //     res.status(500).json({
+    //       success: false,
+    //       error: error.message || "Failed to retrieve metrics",
+    //     });
+    //   }
+    // });
 
     // Logs endpoint
-    this.app.get("/logs", async (req, res) => {
-      try {
-        const { service, level, type, limit = 100, skip = 0 } = req.query;
-        const filters = {};
-        if (service) filters.service = service;
-        if (level) filters.level = level;
-        if (type) filters.type = type;
+    // this.app.get("/logs", async (req, res) => {
+    //   try {
+    //     const { service, level, type, limit = 100, skip = 0 } = req.query;
+    //     const filters = {};
+    //     if (service) filters.service = service;
+    //     if (level) filters.level = level;
+    //     if (type) filters.type = type;
 
-        // Parse numeric parameters
-        const parsedLimit = parseInt(limit, 10) || 100;
-        const parsedSkip = parseInt(skip, 10) || 0;
+    //     // Parse numeric parameters
+    //     const parsedLimit = parseInt(limit, 10) || 100;
+    //     const parsedSkip = parseInt(skip, 10) || 0;
 
-        const logs = await this.loggingService.getLogs(filters, parsedLimit, parsedSkip);
-        res.json({
-          success: true,
-          count: logs.length,
-          data: logs,
-        });
-      } catch (error) {
-        this.loggingService.logError(error, {
-          requestId: req.id,
-          service: "logging",
-        });
-        res.status(500).json({
-          success: false,
-          error: error.message || "Failed to retrieve logs",
-        });
-      }
-    });
+    //     const logs = await this.loggingService.getLogs(filters, parsedLimit, parsedSkip);
+    //     res.json({
+    //       success: true,
+    //       count: logs.length,
+    //       data: logs,
+    //     });
+    //   } catch (error) {
+    //     this.loggingService.logError(error, {
+    //       requestId: req.id,
+    //       service: "logging",
+    //     });
+    //     res.status(500).json({
+    //       success: false,
+    //       error: error.message || "Failed to retrieve logs",
+    //     });
+    //   }
+    // });
 
     // User routes with enhanced error handling
     this.app.get("/user/:id", async (req, res) => {
@@ -221,82 +206,9 @@ class Server {
     });
 
     // Recipe routes
-    this.app.get("/recipes", async (req, res) => {
-      try {
-        const recipeHandlers = RecipeHandlers.getInstance();
-        const mockEvent = {
-          queryStringParameters: req.query,
-        };
-        const response = await recipeHandlers.handleGetAllRecipes(mockEvent);
-        res.status(response.statusCode).json(JSON.parse(response.body));
-      } catch (error) {
-        this.loggingService.logError(error, {
-          requestId: req.id,
-          service: "recipe",
-        });
-        res.status(500).json({
-          success: false,
-          error: error.message || "Failed to process recipe request",
-        });
-      }
-    });
-
-    this.app.get("/recipes-random", async (req, res) => {
-      try {
-        const recipeHandlers = RecipeHandlers.getInstance();
-        const response = await recipeHandlers.handleGetRandomRecipes();
-        res.status(response.statusCode).json(JSON.parse(response.body));
-      } catch (error) {
-        this.loggingService.logError(error, {
-          requestId: req.id,
-          service: "recipe",
-        });
-        res.status(500).json({
-          success: false,
-          error: error.message || "Failed to process recipe request",
-        });
-      }
-    });
-
-    this.app.get("/recipes-search", async (req, res) => {
-      try {
-        const recipeHandlers = RecipeHandlers.getInstance();
-        const mockEvent = {
-          queryStringParameters: req.query,
-        };
-        const response = await recipeHandlers.handleSearchRecipes(mockEvent);
-        res.status(response.statusCode).json(JSON.parse(response.body));
-      } catch (error) {
-        this.loggingService.logError(error, {
-          requestId: req.id,
-          service: "recipe",
-        });
-        res.status(500).json({
-          success: false,
-          error: error.message || "Failed to process recipe request",
-        });
-      }
-    });
-
-    this.app.get("/recipe", async (req, res) => {
-      try {
-        const recipeHandlers = RecipeHandlers.getInstance();
-        const mockEvent = {
-          pathParameters: { id: req.query.id },
-        };
-        const response = await recipeHandlers.handleGetRecipe(mockEvent);
-        res.status(response.statusCode).json(JSON.parse(response.body));
-      } catch (error) {
-        this.loggingService.logError(error, {
-          requestId: req.id,
-          service: "recipe",
-        });
-        res.status(500).json({
-          success: false,
-          error: error.message || "Failed to process recipe request",
-        });
-      }
-    });
+    // this.app.use("/api/v1", { ...recipeRouter, ...monitoringRouter });
+    this.app.use("/api/v1", recipeRouter);
+    this.app.use("/api/monitoring", monitoringRouter);
   }
 
   async start() {

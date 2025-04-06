@@ -1,5 +1,5 @@
-const { initializeApp } = require('firebase/app');
-const { getFirestore } = require('firebase/firestore');
+const { initializeApp } = require("firebase/app");
+const { getFirestore } = require("firebase/firestore");
 
 class FirebaseConfig {
   static #instance;
@@ -14,7 +14,7 @@ class FirebaseConfig {
       storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
       messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
       appId: process.env.FIREBASE_APP_ID,
-      measurementId: process.env.FIREBASE_MEASUREMENT_ID
+      measurementId: process.env.FIREBASE_MEASUREMENT_ID,
     };
 
     this.#app = initializeApp(firebaseConfig);
@@ -37,4 +37,4 @@ class FirebaseConfig {
   }
 }
 
-module.exports = FirebaseConfig; 
+module.exports = FirebaseConfig;

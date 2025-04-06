@@ -1,15 +1,5 @@
 const swaggerJsdoc = require("swagger-jsdoc");
 
-// Helper function to determine if running in Netlify environment
-const isNetlify = () => {
-  return process.env.NETLIFY === "true";
-};
-
-// Get the base URL based on environment
-const getBaseUrl = () => {
-  return isNetlify() ? "/.netlify/functions" : "";
-};
-
 const options = {
   definition: {
     openapi: "3.0.0",
@@ -20,15 +10,11 @@ const options = {
     },
     servers: [
       {
-        url: "/.netlify/functions",
-        description: "Netlify Functions (Production)",
+        url: "",
+        description: "API Server (Production)",
       },
       {
-        url: "http://localhost:8888/.netlify/functions",
-        description: "Netlify Dev (Local)",
-      },
-      {
-        url: "http://localhost:9080",
+        url: "http://localhost:9080/api/v1",
         description: "Local Development Server",
       },
     ],
@@ -387,30 +373,30 @@ const options = {
         },
       },
     },
-    tags: [
-      {
-        name: "Auth",
-        description: "Authentication endpoints",
-      },
-      {
-        name: "Users",
-        description: "User management endpoints",
-      },
-      {
-        name: "Services",
-        description: "Service management endpoints",
-      },
-      {
-        name: "Logs",
-        description: "Logging and monitoring endpoints",
-      },
-      {
-        name: "Health",
-        description: "Health check endpoints",
-      },
-    ],
+    // tags: [
+    //   {
+    //     name: "Auth",
+    //     description: "Authentication endpoints",
+    //   },
+    //   {
+    //     name: "Users",
+    //     description: "User management endpoints",
+    //   },
+    //   {
+    //     name: "Services",
+    //     description: "Service management endpoints",
+    //   },
+    //   {
+    //     name: "Logs",
+    //     description: "Logging and monitoring endpoints",
+    //   },
+    //   {
+    //     name: "Health",
+    //     description: "Health check endpoints",
+    //   },
+    // ],
   },
-  apis: [], // We're defining the API directly in the options above
+  apis: ["./routes/*.js"],
 };
 
 // Generate the swagger specification

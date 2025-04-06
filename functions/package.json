@@ -2,8 +2,14 @@
   "name": "chaitanya-api-gateway",
   "version": "1.0.0",
   "description": "API gateway is a simple api gateway for learning and experients of building complex and robust environment.",
-  "main": "app/server.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
     "start": "node app/server.js",
     "dev": "nodemon app/server.js",
     "test": "jest",
@@ -14,15 +20,13 @@
     "test:ci": "jest --ci --coverage --reporters=default --reporters=jest-junit",
     "test:unit": "jest --testMatch='**/*.test.js'",
     "test:integration": "jest --testMatch='**/*.integration.test.js'",
-    "setup:swagger": "node scripts/setup-swagger.js",
-    "build": "npm run setup:swagger && netlify build",
-    "deploy": "netlify deploy --prod"
+    "setup:swagger": "node scripts/setup-swagger.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "engines": {
+    "node": "18"
+  },
+  "main": "app/server.js",
   "dependencies": {
-    "@netlify/functions": "^2.0.0",
     "axios": "^1.6.8",
     "bcrypt": "^5.1.1",
     "bluebird": "^3.7.2",
@@ -38,7 +42,9 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "uuid": "^9.0.1",
-    "yaml": "^2.4.2"
+    "yaml": "^2.4.2",
+    "firebase-admin": "^12.1.0",
+    "firebase-functions": "^5.0.0"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
@@ -52,8 +58,10 @@
     "nodemon": "^3.1.0",
     "prettier": "^3.2.5",
     "supertest": "^6.3.4",
-    "netlify-cli": "^17.0.0"
+    "eslint-config-google": "^0.14.0",
+    "firebase-functions-test": "^3.1.0"
   },
+  "private": true,
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
