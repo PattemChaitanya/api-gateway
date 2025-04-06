@@ -19,11 +19,6 @@
   status = 200
 
 [[redirects]]
-  from = "/api-docs"
-  to = "/swagger-ui.html"
-  status = 200
-
-[[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
