@@ -73,13 +73,13 @@ class Server {
 
   setupSwagger() {
     // Serve Swagger documentation as the homepage
-    this.app.use("/", (req, res, next) => {
-      // Only redirect if accessing the root path
-      if (req.path === "/") {
-        return res.redirect("/api-docs");
-      }
-      next();
-    });
+    // this.app.use("/", (req, res, next) => {
+    //   // Only redirect if accessing the root path
+    //   if (req.path === "/") {
+    //     return res.redirect("/api-docs");
+    //   }
+    //   next();
+    // });
 
     // Serve Swagger UI
     this.app.use(
