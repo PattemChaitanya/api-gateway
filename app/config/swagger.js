@@ -1,18 +1,36 @@
 const swaggerJsdoc = require("swagger-jsdoc");
 
+// Helper function to determine if running in Netlify environment
+const isNetlify = () => {
+  return process.env.NETLIFY === "true";
+};
+
+// Get the base URL based on environment
+const getBaseUrl = () => {
+  return isNetlify() ? "/.netlify/functions" : "";
+};
+
 const options = {
   definition: {
     openapi: "3.0.0",
     info: {
       title: "Recipe API Documentation",
       description: "API documentation for Recipe Management System",
-      version: "1.0.0"
+      version: "1.0.0",
     },
     servers: [
       {
         url: "/.netlify/functions",
-        description: "Netlify Functions"
-      }
+        description: "Netlify Functions (Production)",
+      },
+      {
+        url: "http://localhost:8888/.netlify/functions",
+        description: "Netlify Dev (Local)",
+      },
+      {
+        url: "http://localhost:9080",
+        description: "Local Development Server",
+      },
     ],
     paths: {
       "/recipes": {
@@ -24,17 +42,17 @@ const options = {
               in: "query",
               schema: {
                 type: "integer",
-                default: 1
-              }
+                default: 1,
+              },
             },
             {
               name: "limit",
               in: "query",
               schema: {
                 type: "integer",
-                default: 10
-              }
-            }
+                default: 10,
+              },
+            },
           ],
           responses: {
             200: {
@@ -42,13 +60,13 @@ const options = {
               content: {
                 "application/json": {
                   schema: {
-                    $ref: "#/components/schemas/RecipePagination"
-                  }
-                }
-              }
-            }
-          }
-        }
+                    $ref: "#/components/schemas/RecipePagination",
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       "/recipes-random": {
         get: {
@@ -61,14 +79,14 @@ const options = {
                   schema: {
                     type: "array",
                     items: {
-                      $ref: "#/components/schemas/Recipe"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                      $ref: "#/components/schemas/Recipe",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       "/recipes-search": {
         get: {
@@ -79,10 +97,10 @@ const options = {
               in: "query",
               required: true,
               schema: {
-                type: "string"
+                type: "string",
               },
-              description: "Search query string"
-            }
+              description: "Search query string",
+            },
           ],
           responses: {
             200: {
@@ -92,11 +110,11 @@ const options = {
                   schema: {
                     type: "array",
                     items: {
-                      $ref: "#/components/schemas/Recipe"
-                    }
-                  }
-                }
-              }
+                      $ref: "#/components/schemas/Recipe",
+                    },
+                  },
+                },
+              },
             },
             400: {
               description: "Bad Request - Missing search query",
@@ -106,15 +124,15 @@ const options = {
                     type: "object",
                     properties: {
                       error: {
-                        type: "string"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                        type: "string",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       "/recipe": {
         get: {
@@ -125,9 +143,9 @@ const options = {
               in: "query",
               required: true,
               schema: {
-                type: "string"
-              }
-            }
+                type: "string",
+              },
+            },
           ],
           responses: {
             200: {
@@ -135,15 +153,15 @@ const options = {
               content: {
                 "application/json": {
                   schema: {
-                    $ref: "#/components/schemas/Recipe"
-                  }
-                }
-              }
+                    $ref: "#/components/schemas/Recipe",
+                  },
+                },
+              },
             },
             404: {
-              description: "Recipe not found"
-            }
-          }
+              description: "Recipe not found",
+            },
+          },
         },
         put: {
           summary: "Update recipe",
@@ -153,19 +171,19 @@ const options = {
               in: "query",
               required: true,
               schema: {
-                type: "string"
-              }
-            }
+                type: "string",
+              },
+            },
           ],
           requestBody: {
             required: true,
             content: {
               "application/json": {
                 schema: {
-                  $ref: "#/components/schemas/RecipeUpdate"
-                }
-              }
-            }
+                  $ref: "#/components/schemas/RecipeUpdate",
+                },
+              },
+            },
           },
           responses: {
             200: {
@@ -173,17 +191,17 @@ const options = {
               content: {
                 "application/json": {
                   schema: {
-                    $ref: "#/components/schemas/Recipe"
-                  }
-                }
-              }
+                    $ref: "#/components/schemas/Recipe",
+                  },
+                },
+              },
             },
             404: {
-              description: "Recipe not found"
-            }
-          }
-        }
-      }
+              description: "Recipe not found",
+            },
+          },
+        },
+      },
     },
     components: {
       securitySchemes: {
@@ -281,77 +299,77 @@ const options = {
           type: "object",
           properties: {
             id: {
-              type: "string"
+              type: "string",
             },
             title: {
-              type: "string"
+              type: "string",
             },
             description: {
-              type: "string"
+              type: "string",
             },
             ingredients: {
               type: "array",
               items: {
-                type: "string"
-              }
+                type: "string",
+              },
             },
             instructions: {
               type: "array",
               items: {
-                type: "string"
-              }
+                type: "string",
+              },
             },
             cookingTime: {
               type: "integer",
-              description: "Cooking time in minutes"
+              description: "Cooking time in minutes",
             },
             servings: {
-              type: "integer"
+              type: "integer",
             },
             imageUrl: {
-              type: "string"
+              type: "string",
             },
             createdAt: {
               type: "string",
-              format: "date-time"
+              format: "date-time",
             },
             updatedAt: {
               type: "string",
-              format: "date-time"
-            }
-          }
+              format: "date-time",
+            },
+          },
         },
         RecipeUpdate: {
           type: "object",
           properties: {
             title: {
-              type: "string"
+              type: "string",
             },
             description: {
-              type: "string"
+              type: "string",
             },
             ingredients: {
               type: "array",
               items: {
-                type: "string"
-              }
+                type: "string",
+              },
             },
             instructions: {
               type: "array",
               items: {
-                type: "string"
-              }
+                type: "string",
+              },
             },
             cookingTime: {
-              type: "integer"
+              type: "integer",
             },
             servings: {
-              type: "integer"
+              type: "integer",
             },
             imageUrl: {
-              type: "string"
-            }
-          }
+              type: "string",
+            },
+          },
         },
         RecipePagination: {
           type: "object",
@@ -359,14 +377,14 @@ const options = {
             data: {
               type: "array",
               items: {
-                $ref: "#/components/schemas/Recipe"
-              }
+                $ref: "#/components/schemas/Recipe",
+              },
             },
             hasMore: {
-              type: "boolean"
-            }
-          }
-        }
+              type: "boolean",
+            },
+          },
+        },
       },
     },
     tags: [
@@ -392,7 +410,7 @@ const options = {
       },
     ],
   },
-  apis: []  // We're defining the API directly in the options above
+  apis: [], // We're defining the API directly in the options above
 };
 
 // Generate the swagger specification

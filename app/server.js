@@ -11,6 +11,7 @@ const { LoggingService } = require("./core/services/LoggingService");
 const MonitoringService = require("./core/services/MonitoringService");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
+const RecipeHandlers = require("./handlers/recipeHandlers");
 
 class Server {
   constructor() {
@@ -35,37 +36,49 @@ class Server {
       next();
     });
 
-    this.app.use(cors());
+    this.app.use(
+      cors({
+        origin: "*", // Allow all origins
+        methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+        credentials: true,
+        preflightContinue: false,
+        optionsSuccessStatus: 204,
+      })
+    );
     this.app.use(bodyParser.json());
 
     // Serve static files
     this.app.use("/public", express.static(path.join(__dirname, "../public")));
 
     // Add request logging
-    this.app.use(this.loggingService.getRequestLogger());
+    // this.app.use(this.loggingService.getRequestLogger());
 
     // Add request monitoring
-    this.app.use((req, res, next) => {
-      res.on("finish", () => {
-        this.monitoringService.trackRequest(req, res);
-      });
-      next();
-    });
+    // this.app.use((req, res, next) => {
+    //   res.on("finish", () => {
+    //     this.monitoringService.trackRequest(req, res);
+    //   });
+    //   next();
+    // });
 
     // Add error handling middleware
-    this.app.use((err, req, res, next) => {
-      this.loggingService.logError(err, {
-        requestId: req.id,
-        service: req.headers["app_id"],
-      });
-      next(err);
-    });
+    // this.app.use((err, req, res, next) => {
+    //   this.loggingService.logError(err, {
+    //     requestId: req.id,
+    //     service: req.headers["app_id"],
+    //   });
+    //   next(err);
+    // });
   }
 
   setupSwagger() {
     // Serve Swagger documentation as the homepage
-    this.app.get("/", (req, res) => {
-      res.redirect("/api-docs");
+    this.app.use("/", (req, res, next) => {
+      // Only redirect if accessing the root path
+      if (req.path === "/") {
+        return res.redirect("/api-docs");
+      }
+      next();
     });
 
     // Serve Swagger UI
@@ -82,6 +95,7 @@ class Server {
           displayRequestDuration: true,
           filter: true,
           deepLinking: true,
+          tryItOutEnabled: true,
         },
       })
     );
@@ -202,6 +216,85 @@ class Server {
         res.status(500).json({
           success: false,
           error: error.message || "Failed to process user request",
+        });
+      }
+    });
+
+    // Recipe routes
+    this.app.get("/recipes", async (req, res) => {
+      try {
+        const recipeHandlers = RecipeHandlers.getInstance();
+        const mockEvent = {
+          queryStringParameters: req.query,
+        };
+        const response = await recipeHandlers.handleGetAllRecipes(mockEvent);
+        res.status(response.statusCode).json(JSON.parse(response.body));
+      } catch (error) {
+        this.loggingService.logError(error, {
+          requestId: req.id,
+          service: "recipe",
+        });
+        res.status(500).json({
+          success: false,
+          error: error.message || "Failed to process recipe request",
+        });
+      }
+    });
+
+    this.app.get("/recipes-random", async (req, res) => {
+      try {
+        const recipeHandlers = RecipeHandlers.getInstance();
+        const response = await recipeHandlers.handleGetRandomRecipes();
+        res.status(response.statusCode).json(JSON.parse(response.body));
+      } catch (error) {
+        this.loggingService.logError(error, {
+          requestId: req.id,
+          service: "recipe",
+        });
+        res.status(500).json({
+          success: false,
+          error: error.message || "Failed to process recipe request",
+        });
+      }
+    });
+
+    this.app.get("/recipes-search", async (req, res) => {
+      try {
+        const recipeHandlers = RecipeHandlers.getInstance();
+        const mockEvent = {
+          queryStringParameters: req.query,
+        };
+        console.log("mockEvent", mockEvent);
+        const response = await recipeHandlers.handleSearchRecipes(mockEvent);
+        res.status(response.statusCode).json(JSON.parse(response.body));
+      } catch (error) {
+        this.loggingService.logError(error, {
+          requestId: req.id,
+          service: "recipe",
+        });
+        res.status(500).json({
+          success: false,
+          error: error.message || "Failed to process recipe request",
+        });
+      }
+    });
+
+    this.app.get("/recipe", async (req, res) => {
+      try {
+        const recipeHandlers = RecipeHandlers.getInstance();
+        const mockEvent = {
+          pathParameters: { id: req.query.id },
+        };
+        const response = await recipeHandlers.handleGetRecipe(mockEvent);
+        res.status(response.statusCode).json(JSON.parse(response.body));
+      } catch (error) {
+        this.loggingService.logError(error, {
+          requestId: req.id,
+          service: "recipe",
+        });
+        res.status(500).json({
+          success: false,
+          error: error.message || "Failed to process recipe request",
         });
       }
     });

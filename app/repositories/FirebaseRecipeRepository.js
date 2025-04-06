@@ -4,7 +4,6 @@ const {
   query,
   limit,
   startAfter,
-  orderBy,
   where,
   doc,
   getDoc,
@@ -36,7 +35,7 @@ class FirebaseRecipeRepository extends BaseRepository {
   async findAll(page = 1, limitCount = 10) {
     try {
       const recipesRef = collection(this.#db, this.collectionName);
-      const q = query(recipesRef, orderBy("createdAt", "desc"), limit(limitCount));
+      const q = query(recipesRef, limit(limitCount));
 
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(
