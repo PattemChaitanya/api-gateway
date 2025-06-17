@@ -35,6 +35,7 @@ This documentation provides comprehensive information about the API Gateway proj
 - [Installation Guide](./setup/installation.md)
 - [Configuration Guide](./setup/configuration.md)
 - [API Reference](./api/endpoints.md)
+- [Reddit API Reference](./api/reddit-api.md)
 - [Development Setup](./development/setup.md)
 - [Contributing Guidelines](./development/contributing.md)
 

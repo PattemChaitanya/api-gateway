@@ -65,7 +65,7 @@ class DatabaseManager {
    */
   async createIndexes(indexes) {
     console.warn(
-      "Firebase indexes should be managed in the Firebase console or using Firebase CLI"
+      "Firebase indexes should be managed in the Firebase console or using Firebase CLI",
     );
     return true;
   }

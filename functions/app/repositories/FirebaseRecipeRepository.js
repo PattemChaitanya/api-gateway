@@ -42,7 +42,7 @@ class FirebaseRecipeRepository extends BaseRepository {
           new Recipe({
             id: doc.id,
             ...doc.data(),
-          })
+          }),
       );
     } catch (error) {
       console.error("Error finding all recipes:", error);
@@ -76,7 +76,7 @@ class FirebaseRecipeRepository extends BaseRepository {
         recipesRef,
         where("title", ">=", searchQuery),
         where("title", "<=", searchQuery + "\uf8ff"),
-        limit(20)
+        limit(20),
       );
 
       const querySnapshot = await getDocs(q);
@@ -85,7 +85,7 @@ class FirebaseRecipeRepository extends BaseRepository {
           new Recipe({
             id: doc.id,
             ...doc.data(),
-          })
+          }),
       );
     } catch (error) {
       console.error(`Error searching recipes with query ${searchQuery}:`, error);

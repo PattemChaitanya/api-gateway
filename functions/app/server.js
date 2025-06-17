@@ -12,6 +12,14 @@ const MonitoringService = require("./core/services/MonitoringService");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const { recipeRouter, monitoringRouter, redditRouter } = require("./routes");
+const dotenv = require("dotenv");
+
+dotenv.config({
+  path:
+    process.env.NODE_ENV === "production"
+      ? "path.join(__dirname, '../.env.example')"
+      : "path.join(__dirname, '../.env')",
+});
 
 class Server {
   constructor() {
@@ -38,9 +46,9 @@ class Server {
 
     this.app.use(
       cors({
-        origin: "*", // Allow all origins
+        origin: "*", // Allow all origins. need to change this to the allowed origins
         methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-        credentials: true,
+        // credentials: true,
         preflightContinue: false,
         optionsSuccessStatus: 204,
       })
@@ -163,21 +171,21 @@ class Server {
       this.server = this.app.listen(this.port, () => {
         console.info(`Server running on http://localhost:${this.port}`);
 
-        // Log server metrics on startup
-        this.monitoringService.logMetrics();
+        //   // Log server metrics on startup
+        //   this.monitoringService.logMetrics();
 
-        // Set up periodic metrics logging
-        setInterval(
-          () => {
-            this.monitoringService.logMetrics();
-          },
-          5 * 60 * 1000
-        ); // Log every 5 minutes
+        //   // Set up periodic metrics logging
+        //   setInterval(
+        //     () => {
+        //       this.monitoringService.logMetrics();
+        //     },
+        //     5 * 60 * 1000
+        //   ); // Log every 5 minutes
       });
 
-      return this.server;
+      // return this.server;
     } catch (error) {
-      console.error("Failed to start server:", error);
+      // console.error("Failed to start server:", error);
       this.loggingService.logError(error, {
         service: "system",
         type: "startup_error",
@@ -234,4 +242,4 @@ server.start().catch((error) => {
   process.exit(1);
 });
 
-module.exports = server;
+// module.exports = server;

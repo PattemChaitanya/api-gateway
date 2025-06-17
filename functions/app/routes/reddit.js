@@ -31,7 +31,7 @@ class RedditAPI {
   async getAccessToken() {
     try {
       const auth = Buffer.from(
-        `${process.env.REDDIT_CLIENT_ID}:${process.env.REDDIT_CLIENT_SECRET}`,
+        `${process.env.REDDIT_CLIENT_ID}:${process.env.REDDIT_CLIENT_SECRET}`
       ).toString("base64");
 
       const response = await axios.post(
@@ -46,12 +46,12 @@ class RedditAPI {
             Authorization: `Basic ${auth}`,
             "Content-Type": "application/x-www-form-urlencoded",
           },
-        },
+        }
       );
       return response.data.access_token;
     } catch (error) {
       this.logger.logError(error, { service: "reddit", operation: "getAccessToken" });
-      throw error;
+      throw new Error("Failed to get Reddit access token");
     }
   }
 
@@ -65,11 +65,11 @@ class RedditAPI {
   async getPosts(subreddit, sort = "hot", limit = 25) {
     try {
       const accessToken = await this.getAccessToken();
-
-      const url = `${this.baseUrl}/r/${subreddit}/${sort}.json?limit=${limit}`;
+      const url = `${this.baseUrl}/r/${subreddit}/${sort}?limit=${limit}`;
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
+          "User-Agent": `${process.env.REDDIT_USER_AGENT}`,
         },
       });
       return {
@@ -100,11 +100,11 @@ class RedditAPI {
   async getPostComments(postId, subreddit) {
     try {
       const accessToken = await this.getAccessToken();
-
-      const url = `${this.baseUrl}/r/${subreddit}/comments/${postId}.json`;
+      const url = `${this.baseUrl}/r/${subreddit}/comments/${postId}`;
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
+          "User-Agent": `${process.env.REDDIT_USER_AGENT}`,
         },
       });
       return {
@@ -135,11 +135,11 @@ class RedditAPI {
   async getSubredditInfo(subreddit) {
     try {
       const accessToken = await this.getAccessToken();
-
-      const url = `${this.baseUrl}/r/${subreddit}/about.json`;
+      const url = `${this.baseUrl}/r/${subreddit}/about`;
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
+          "User-Agent": `${process.env.REDDIT_USER_AGENT}`,
         },
       });
       return {
@@ -172,19 +172,43 @@ class RedditAPI {
   async searchPosts(query, subreddit = "", sort = "relevance", limit = 25) {
     try {
       const accessToken = await this.getAccessToken();
-
       const subredditPath = subreddit ? `r/${subreddit}/` : "";
-      const url = `${this.baseUrl}/${subredditPath}search.json?q=${encodeURIComponent(query)}&sort=${sort}&limit=${limit}`;
+      const url = `${this.baseUrl}/${subredditPath}search?q=${encodeURIComponent(query)}&sort=${sort}&limit=${limit}&raw_json=1`;
+
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
+          "User-Agent": `${process.env.REDDIT_USER_AGENT}`,
         },
       });
+
+      // Extract post data and include additional fields needed for individual post view
+      const posts = response.data.data.children.map((child) => {
+        const post = child.data;
+        return {
+          id: post.id,
+          title: post.title,
+          selftext: post.selftext,
+          author: post.author,
+          subreddit: post.subreddit,
+          score: post.score,
+          num_comments: post.num_comments,
+          created_utc: post.created_utc,
+          permalink: post.permalink,
+          url: post.url,
+          is_video: post.is_video,
+          media: post.media,
+          thumbnail: post.thumbnail,
+          subreddit_id: post.subreddit_id,
+          link_flair_text: post.link_flair_text,
+        };
+      });
+
       return {
         statusCode: 200,
         body: JSON.stringify({
           success: true,
-          data: response.data.data.children.map((child) => child.data),
+          data: posts,
         }),
       };
     } catch (error) {
@@ -208,11 +232,11 @@ class RedditAPI {
   async searchSubreddits(query, limit = 25) {
     try {
       const accessToken = await this.getAccessToken();
-
-      const url = `${this.baseUrl}/subreddits/search.json?q=${encodeURIComponent(query)}&limit=${limit}`;
+      const url = `${this.baseUrl}/subreddits/search?q=${encodeURIComponent(query)}&limit=${limit}`;
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
+          "User-Agent": `${process.env.REDDIT_USER_AGENT}`,
         },
       });
       return {
@@ -242,11 +266,11 @@ class RedditAPI {
   async getUserProfile(username) {
     try {
       const accessToken = await this.getAccessToken();
-
-      const url = `${this.baseUrl}/user/${username}/about.json`;
+      const url = `${this.baseUrl}/user/${username}/about`;
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
+          "User-Agent": `${process.env.REDDIT_USER_AGENT}`,
         },
       });
       return {
